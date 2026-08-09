@@ -5,13 +5,15 @@ import {
   ShoppingBag, 
   BarChart3, 
   CreditCard, 
-  Settings, 
-  ShoppingCart
+  Settings,
+  ShoppingCart,
+  Plus
 } from 'lucide-react';
 
 export default function Sidebar({ activePage }) {
   return (
-    <aside className="w-64 bg-white border-r border-[#C4BEB6]/30 flex flex-col p-4 shrink-0 h-full z-20">
+    // Added print:hidden here!
+    <aside className="w-64 bg-white border-r border-[#C4BEB6]/30 flex flex-col p-4 shrink-0 h-full z-20 print:hidden">
       
       <div className="flex items-center gap-3 mb-10 px-2 mt-2">
         <div className="w-8 h-8 bg-[#1A1A1A] text-[#E9E3DB] flex items-center justify-center rounded-lg font-bold">
@@ -20,7 +22,7 @@ export default function Sidebar({ activePage }) {
         <span className="text-xl font-extrabold tracking-wide text-[#3d352e]">LUSTRE</span>
       </div>
 
-      <nav className="flex-1 space-y-1.5 overflow-y-auto">
+      <nav className="flex-1 space-y-1.5 overflow-y-auto scrollbar-hide">
         <p className="px-2 text-[10px] font-bold text-[#1A1A1A]/40 mb-3 uppercase tracking-widest">
           Main Menu
         </p>
@@ -44,18 +46,23 @@ export default function Sidebar({ activePage }) {
           active={activePage === 'Product'} 
         />
         <NavItem 
+          icon={<ShoppingCart size={20} strokeWidth={2} />} 
+          label="Orders" 
+          path="/orders"
+          active={activePage === 'Orders'} 
+        />
+        <NavItem 
           icon={<CreditCard size={20} strokeWidth={2} />} 
           label="Sales" 
           path="/sales"
           active={activePage === 'Sales'} 
         />
-<NavItem 
-  icon={<ShoppingCart size={20} strokeWidth={2} />} 
-  label="Orders" 
-  path="/orders"
-  active={activePage === 'Orders'} 
-/>
-
+        <NavItem 
+          icon={<Plus size={20} strokeWidth={2} />} 
+          label="Add Order" 
+          path="/add-order"
+          active={activePage === 'AddOrder'} 
+        />
       </nav>
       
       <div className="mt-auto pt-4 border-t border-[#C4BEB6]/20">
@@ -66,8 +73,6 @@ export default function Sidebar({ activePage }) {
           active={activePage === 'Setting'} 
         />
       </div>
-
-
     </aside>
   );
 }

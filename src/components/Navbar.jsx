@@ -3,7 +3,8 @@ import { Search, Calendar } from "lucide-react";
 
 export default function Navbar({ title }) {
   return (
-    <header className="h-[72px] shrink-0 flex items-center justify-between px-8 bg-white/80 backdrop-blur-md border-b border-[#C4BEB6]/30 z-10 sticky top-0">
+    // Added print:hidden here!
+    <header className="h-[72px] shrink-0 flex items-center justify-between px-8 bg-white/80 backdrop-blur-md border-b border-[#C4BEB6]/30 z-10 sticky top-0 print:hidden">
       
       <div className="min-w-0">
         <h1 className="text-xl font-bold tracking-tight text-[#1A1A1A] truncate">
