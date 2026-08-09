@@ -14,7 +14,7 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Navigate to="/store" replace />} />
+        <Route path="/" element={<Navigate to="/overview" replace />} />
         
         {/* Dashboard Routes wrapped in the Layout */}
         <Route element={<DashboardLayout />}>
@@ -26,7 +26,7 @@ export default function App() {
         </Route>
         
         {/* Storefront Routes (These don't use the admin dashboard layout) */}
-        <Route path="/store" element={<Hero />} />
+        {/* <Route path="/store" element={<Hero />} /> */}
         <Route path="/contact" element={<Contact />} />
         
         <Route path="*" element={<Navigate to="/store" replace />} />
