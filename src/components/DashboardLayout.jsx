@@ -13,8 +13,11 @@ export default function DashboardLayout() {
       case "/products":    return { active: "Product", title: "Product Inventory" };
       case "/analytics":   return { active: "Analytics", title: "Performance Analytics" };
       case "/sales":       return { active: "Sales", title: "Sales & Transactions" };
+      case "/orders":      return { active: "Orders", title: "Order Management" };
+      case "/add-order":   return { active: "Orders", title: "Add New Order" };
       case "/overview":
       default:             return { active: "Overview", title: "Dashboard Overview" };
+      
     }
   };
 

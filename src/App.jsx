@@ -8,6 +8,8 @@ import ProductsList from './pages/ProductsList';
 import Analytics from './pages/Analytics';
 import Sales from './pages/Sales';
 import Contact from './pages/Contact';
+import OrdersList from './pages/OrdersList';
+import AddOrder from './pages/AddOrder';
 
 export default function App() {
   return (
@@ -23,6 +25,8 @@ export default function App() {
           <Route path="/add-product" element={<AddProduct />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/sales" element={<Sales />} />
+          <Route path="/orders" element={<OrdersList />} />
+          <Route path="/add-order" element={<AddOrder />} />
         </Route>
         
         {/* Storefront pages */}

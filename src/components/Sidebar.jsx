@@ -5,7 +5,8 @@ import {
   ShoppingBag, 
   BarChart3, 
   CreditCard, 
-  Settings 
+  Settings, 
+  ShoppingCart
 } from 'lucide-react';
 
 export default function Sidebar({ activePage }) {
@@ -48,6 +49,13 @@ export default function Sidebar({ activePage }) {
           path="/sales"
           active={activePage === 'Sales'} 
         />
+<NavItem 
+  icon={<ShoppingCart size={20} strokeWidth={2} />} 
+  label="Orders" 
+  path="/orders"
+  active={activePage === 'Orders'} 
+/>
+
       </nav>
       
       <div className="mt-auto pt-4 border-t border-[#C4BEB6]/20">
@@ -58,6 +66,8 @@ export default function Sidebar({ activePage }) {
           active={activePage === 'Setting'} 
         />
       </div>
+
+
     </aside>
   );
 }
