@@ -4,32 +4,32 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import DashboardLayout from './components/DashboardLayout';
 import Overview from './pages/Overview';
 import AddProduct from './pages/AddProduct';
-import Hero from './pages/Hero';
-import Contact from './pages/Contact';
 import ProductsList from './pages/ProductsList';
 import Analytics from './pages/Analytics';
 import Sales from './pages/Sales';
+import Contact from './pages/Contact';
 
 export default function App() {
   return (
     <Router>
       <Routes>
+        {/* Default route pushes straight into the dashboard */}
         <Route path="/" element={<Navigate to="/overview" replace />} />
         
-        {/* Dashboard Routes wrapped in the Layout */}
+        {/* Dashboard wrapper handles all layout logic */}
         <Route element={<DashboardLayout />}>
           <Route path="/overview" element={<Overview />} />
-          <Route path="/add-product" element={<AddProduct />} />
           <Route path="/products" element={<ProductsList />} />
+          <Route path="/add-product" element={<AddProduct />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/sales" element={<Sales />} />
         </Route>
         
-        {/* Storefront Routes (These don't use the admin dashboard layout) */}
-        {/* <Route path="/store" element={<Hero />} /> */}
+        {/* Storefront pages */}
         <Route path="/contact" element={<Contact />} />
         
-        <Route path="*" element={<Navigate to="/store" replace />} />
+        {/* Safety catch-all */}
+        <Route path="*" element={<Navigate to="/overview" replace />} />
       </Routes>
     </Router>
   );
