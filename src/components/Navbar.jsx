@@ -1,6 +1,6 @@
 import React from "react";
-import { Search, Calendar } from "lucide-react";
-import ThemeToggle from "./ThemeToggle"; // Make sure to import your toggle!
+import { Search, Calendar, TrendingUp } from "lucide-react";
+import ThemeToggle from "./ThemeToggle"; 
 
 export default function Navbar({ title }) {
   return (
@@ -22,6 +22,12 @@ export default function Navbar({ title }) {
             placeholder="Search..."
             className="w-full pl-11 pr-4 py-2.5 bg-[#FBF9F6] dark:bg-white/5 border border-transparent rounded-[1.5rem] text-sm focus:bg-white dark:focus:bg-[#111111] focus:border-[#0F0E0D]/20 dark:focus:border-white/20 outline-none transition-all font-bold placeholder:text-[#0F0E0D]/40 dark:placeholder:text-white/40 text-[#0F0E0D] dark:text-white shadow-inner"
           />
+        </div>
+
+        {/* Current Profit Pill */}
+        <div className="hidden lg:flex px-4 py-2.5 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-[1.5rem] text-xs uppercase tracking-widest font-bold text-[#0F0E0D] dark:text-white hover:bg-[#FBF9F6] dark:hover:bg-white/5 transition-colors items-center gap-2 cursor-pointer whitespace-nowrap shadow-[0_5px_15px_-5px_rgba(0,0,0,0.02)]">
+          <TrendingUp size={14} strokeWidth={2.5} className="text-[#2E4A35] dark:text-green-400" />
+          <span>$124,563</span>
         </div>
 
         {/* Date Pill */}

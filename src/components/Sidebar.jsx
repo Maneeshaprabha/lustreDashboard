@@ -7,7 +7,8 @@ import {
   CreditCard, 
   Settings,
   ShoppingCart,
-  Plus
+  Plus,
+  Receipt
 } from 'lucide-react';
 
 export default function Sidebar({ activePage }) {
@@ -62,7 +63,15 @@ export default function Sidebar({ activePage }) {
           path="/add-order"
           active={activePage === 'AddOrder'} 
         />
+           <NavItem 
+          icon={<Receipt size={20} strokeWidth={2.5} />} 
+          label="Extra Bills" 
+          path="/expenses"
+          active={activePage === 'Expenses'} 
+        />
       </nav>
+
+   
       
       <div className="mt-auto pt-4 border-t border-[#EBE6E0] dark:border-white/10 transition-colors">
         <NavItem 

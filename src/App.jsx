@@ -13,6 +13,7 @@ import OrdersList from './pages/OrdersList';
 import AddOrder from './pages/AddOrder';
 import Settings from './pages/Settings';
 import { ThemeProvider } from './context/ThemeContext';
+import Expenses from './pages/Expenses';
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="/sales" element={<Sales />} />
             <Route path="/orders" element={<OrdersList />} />
             <Route path="/add-order" element={<AddOrder />} />
+            <Route path="/expenses" element={<Expenses />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
           

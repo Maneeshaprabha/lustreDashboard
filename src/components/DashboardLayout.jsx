@@ -15,6 +15,7 @@ export default function DashboardLayout() {
       case "/sales":       return { active: "Sales", title: "Sales & Transactions" };
       case "/orders":      return { active: "Orders", title: "Order Management" };
       case "/add-order":   return { active: "Orders", title: "Add New Order" };
+      case "/expenses":    return { active: "Expenses", title: "Extra Bills & Expenses" };
       case "/settings":    return { active: "Setting", title: "Global Settings" };
       case "/overview":
       default:             return { active: "Overview", title: "Dashboard Overview" };
