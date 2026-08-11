@@ -15,17 +15,17 @@ export default function DashboardLayout() {
       case "/sales":       return { active: "Sales", title: "Sales & Transactions" };
       case "/orders":      return { active: "Orders", title: "Order Management" };
       case "/add-order":   return { active: "Orders", title: "Add New Order" };
+      case "/settings":    return { active: "Setting", title: "Global Settings" };
       case "/overview":
       default:             return { active: "Overview", title: "Dashboard Overview" };
-      
     }
   };
 
   const { active, title } = getPageInfo();
 
   return (
-    // Locked viewport wrapper
-    <div className="flex h-screen w-screen bg-[#E9E3DB]/20 text-[#1A1A1A] font-sans antialiased overflow-hidden">
+    // Updated with dark mode classes for the root layout container
+    <div className="flex h-screen w-screen bg-[#FBF9F6] dark:bg-[#0A0A0A] text-[#0F0E0D] dark:text-white font-sans antialiased overflow-hidden transition-colors duration-300">
       
       <Sidebar activePage={active} />
 

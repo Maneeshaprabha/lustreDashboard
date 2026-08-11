@@ -33,51 +33,54 @@ export default function OrdersList() {
 
   const getStatusBadge = (status) => {
     switch(status) {
-      case 'Delivered': return 'bg-[#1A1A1A] text-[#E9E3DB]';
-      case 'Shipped': return 'bg-green-100 text-green-800';
-      case 'Processing': return 'bg-blue-100 text-blue-800';
-      case 'Pending': return 'bg-orange-100 text-orange-800';
-      case 'Cancelled': return 'bg-red-50 text-red-600';
-      default: return 'bg-[#C4BEB6]/20 text-[#1A1A1A]';
+      case 'Delivered': return 'bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D]';
+      case 'Shipped': return 'bg-[#F4F8F4] dark:bg-green-500/20 text-[#2E4A35] dark:text-green-400 border border-[#E2EBE2] dark:border-green-500/30';
+      case 'Processing': return 'bg-[#F4F8F9] dark:bg-blue-500/20 text-[#2E3A4A] dark:text-blue-400 border border-[#E2E6EB] dark:border-blue-500/30';
+      case 'Pending': return 'bg-[#FFF9F4] dark:bg-orange-500/20 text-[#6A4A2E] dark:text-orange-400 border border-[#F2EAE2] dark:border-orange-500/30';
+      case 'Cancelled': return 'bg-[#FFF4F4] dark:bg-red-500/20 text-[#6A3131] dark:text-red-400 border border-[#F2E2E2] dark:border-red-500/30';
+      default: return 'bg-[#FBF9F6] dark:bg-white/10 text-[#0F0E0D] dark:text-white';
     }
   };
 
   return (
-    <motion.div variants={containerVariants} initial="hidden" animate="visible" className="p-8 max-w-[1400px] w-full mx-auto space-y-6">
+    <motion.div variants={containerVariants} initial="hidden" animate="visible" className="p-6 md:p-10 max-w-[1400px] w-full mx-auto space-y-6 bg-[#FBF9F6] dark:bg-[#0A0A0A] min-h-screen transition-colors duration-300">
       
       {/* Action Header */}
       <motion.div variants={itemVariants} className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
-        <h1 className="text-2xl font-bold flex items-center gap-2">Order Management</h1>
+        <div>
+          <h1 className="text-3xl font-extrabold text-[#0F0E0D] dark:text-white tracking-tight flex items-center gap-2 transition-colors">Order Management</h1>
+          <p className="text-[10px] text-[#0F0E0D]/50 dark:text-white/50 font-bold uppercase tracking-[0.3em] mt-2 transition-colors">Track and fulfill customer requests</p>
+        </div>
         
-        <div className="flex gap-3 w-full md:w-auto">
+        <div className="flex flex-wrap gap-3 w-full md:w-auto items-center">
           <div className="relative flex-1 md:w-64">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#1A1A1A]/40" size={18} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#0F0E0D]/40 dark:text-white/40 transition-colors" size={16} strokeWidth={2.5} />
             <input 
               type="text" 
               placeholder="Search orders..." 
-              className="w-full pl-11 pr-4 py-2.5 bg-white border border-[#C4BEB6]/40 rounded-full text-sm focus:border-[#1A1A1A]/30 focus:ring-2 focus:ring-[#1A1A1A]/5 outline-none transition-all font-medium placeholder:text-[#1A1A1A]/40"
+              className="w-full pl-11 pr-4 py-3 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-[1.5rem] text-sm focus:border-[#0F0E0D]/30 dark:focus:border-white/30 outline-none transition-all font-bold placeholder:text-[#0F0E0D]/40 dark:placeholder:text-white/40 text-[#0F0E0D] dark:text-white shadow-sm"
             />
           </div>
-          <button className="px-4 py-2.5 bg-white border border-[#C4BEB6]/40 rounded-full text-sm font-bold text-[#1A1A1A] hover:bg-[#C4BEB6]/10 transition-colors flex items-center gap-2">
-            <Filter size={16} /> Filter
+          <button className="px-6 py-3 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-[1.5rem] text-[10px] uppercase tracking-widest font-bold text-[#0F0E0D] dark:text-white hover:bg-[#FBF9F6] dark:hover:bg-white/5 transition-colors flex items-center gap-2 shadow-sm">
+            <Filter size={14} strokeWidth={2.5} /> Filter
           </button>
           
           {/* Linked to your AddOrder page */}
           <Link to="/add-order">
-            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="px-6 py-2.5 bg-[#1A1A1A] text-[#E9E3DB] rounded-full text-sm font-bold flex items-center gap-2 shadow-lg hover:bg-[#1A1A1A]/80 transition-colors whitespace-nowrap">
-              <Plus size={18} strokeWidth={3} /> Add Order
+            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="px-6 py-3 bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D] rounded-[1.5rem] text-[10px] uppercase tracking-widest font-bold flex items-center gap-2 shadow-[0_10px_20px_-10px_rgba(15,14,13,0.4)] dark:shadow-[0_10px_20px_-10px_rgba(255,255,255,0.4)] hover:bg-[#0F0E0D]/90 dark:hover:bg-white/90 transition-colors whitespace-nowrap">
+              <Plus size={16} strokeWidth={3} /> Add Order
             </motion.button>
           </Link>
         </div>
       </motion.div>
 
       {/* Orders Table Card */}
-      <motion.div variants={itemVariants} className="bg-white rounded-[2rem] shadow-sm border border-[#C4BEB6]/20 overflow-hidden">
+      <motion.div variants={itemVariants} className="bg-white dark:bg-[#111111] rounded-[2.5rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.03)] border border-[#EBE6E0] dark:border-white/10 overflow-hidden transition-colors">
         <div className="overflow-x-auto min-h-[500px]">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-[#C4BEB6]/5 text-[#1A1A1A]/50 text-xs uppercase tracking-wider border-b border-[#C4BEB6]/20">
-                <th className="px-6 py-5 font-bold flex items-center gap-1 cursor-pointer hover:text-[#1A1A1A]">Order ID <ArrowUpDown size={12} /></th>
+              <tr className="bg-[#FBF9F6] dark:bg-white/5 text-[#0F0E0D]/40 dark:text-white/40 text-[9px] uppercase tracking-[0.25em] border-b border-[#EBE6E0] dark:border-white/10 transition-colors">
+                <th className="px-6 py-5 font-bold flex items-center gap-1.5 cursor-pointer hover:text-[#0F0E0D] dark:hover:text-white">Order ID <ArrowUpDown size={12} strokeWidth={2.5} /></th>
                 <th className="px-6 py-5 font-bold">Customer</th>
                 <th className="px-6 py-5 font-bold">Date</th>
                 <th className="px-6 py-5 font-bold">Shipping Info</th>
@@ -88,62 +91,62 @@ export default function OrdersList() {
             </thead>
             <tbody className="text-sm">
               {orders.map((order) => (
-                <tr key={order.id} className="border-b border-[#C4BEB6]/10 hover:bg-[#C4BEB6]/5 transition-colors group">
+                <tr key={order.id} className="border-b border-[#EBE6E0]/60 dark:border-white/5 hover:bg-[#FBF9F6]/50 dark:hover:bg-white/5 transition-colors group">
                   
                   {/* Order ID */}
-                  <td className="px-6 py-4 font-bold text-[#1A1A1A]">{order.id}</td>
+                  <td className="px-6 py-5 font-mono font-bold text-[#0F0E0D]/60 dark:text-white/60 text-xs tracking-wider transition-colors">{order.id}</td>
                   
                   {/* Customer Info */}
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-5">
                     <div>
-                      <h4 className="font-bold text-[#1A1A1A]">{order.customer}</h4>
-                      <p className="text-xs text-[#1A1A1A]/50 font-medium mt-0.5">{order.email}</p>
+                      <h4 className="font-extrabold text-[#0F0E0D] dark:text-white text-sm tracking-tight transition-colors">{order.customer}</h4>
+                      <p className="text-[10px] text-[#0F0E0D]/40 dark:text-white/40 font-bold uppercase tracking-widest mt-1 transition-colors">{order.email}</p>
                     </div>
                   </td>
                   
                   {/* Date */}
-                  <td className="px-6 py-4 font-medium text-[#1A1A1A]/60">{order.date}</td>
+                  <td className="px-6 py-5 font-medium text-[#0F0E0D]/50 dark:text-white/50 text-xs transition-colors">{order.date}</td>
 
                   {/* Shipping Info */}
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-5">
                     <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-1.5 text-[#1A1A1A]/80 font-bold text-xs">
-                        <Truck size={12} /> {order.courier}
+                      <div className="flex items-center gap-1.5 text-[#0F0E0D]/80 dark:text-white/80 font-bold text-xs transition-colors">
+                        <Truck size={12} strokeWidth={2.5} /> {order.courier}
                       </div>
-                      <div className="text-xs text-[#1A1A1A]/50 font-medium">
+                      <div className="text-[10px] text-[#0F0E0D]/40 dark:text-white/40 font-mono font-bold transition-colors">
                         {order.tracking}
                       </div>
                     </div>
                   </td>
                   
                   {/* Status Badge */}
-                  <td className="px-6 py-4">
-                    <span className={`px-3 py-1 text-[11px] uppercase tracking-wider font-bold rounded-full ${getStatusBadge(order.status)}`}>
+                  <td className="px-6 py-5">
+                    <span className={`px-4 py-2 text-[9px] uppercase tracking-[0.2em] font-bold rounded-full inline-flex items-center ${getStatusBadge(order.status)} transition-colors`}>
                       {order.status}
                     </span>
                   </td>
 
                   {/* Amount */}
-                  <td className="px-6 py-4 font-bold text-[#1A1A1A]">{order.amount}</td>
+                  <td className="px-6 py-5 font-extrabold text-[#0F0E0D] dark:text-white text-base tracking-tight transition-colors">{order.amount}</td>
                   
                   {/* Actions (Edit / Delete) */}
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-5">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       {/* Update/Edit Button */}
-                      <button className="p-2 text-[#1A1A1A]/60 hover:text-[#1A1A1A] hover:bg-[#C4BEB6]/20 rounded-lg transition-colors" title="Edit Order">
-                        <Pencil size={18} />
+                      <button className="p-2 text-[#0F0E0D]/50 dark:text-white/50 hover:text-[#0F0E0D] dark:hover:text-white hover:bg-[#EBE6E0] dark:hover:bg-white/10 rounded-xl transition-colors" title="Edit Order">
+                        <Pencil size={16} strokeWidth={2.5} />
                       </button>
                       {/* Delete Button (Triggers local state update) */}
                       <button 
                         onClick={() => handleDelete(order.id)}
-                        className="p-2 text-[#1A1A1A]/60 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" 
+                        className="p-2 text-[#0F0E0D]/50 dark:text-white/50 hover:text-[#6A3131] dark:hover:text-red-400 hover:bg-[#FFF4F4] dark:hover:bg-red-500/20 rounded-xl transition-colors" 
                         title="Delete Order"
                       >
-                        <Trash2 size={18} />
+                        <Trash2 size={16} strokeWidth={2.5} />
                       </button>
                       {/* More Options */}
-                      <button className="p-2 text-[#1A1A1A]/60 hover:text-[#1A1A1A] hover:bg-[#C4BEB6]/20 rounded-lg transition-colors">
-                        <MoreHorizontal size={18} />
+                      <button className="p-2 text-[#0F0E0D]/50 dark:text-white/50 hover:text-[#0F0E0D] dark:hover:text-white hover:bg-[#EBE6E0] dark:hover:bg-white/10 rounded-xl transition-colors">
+                        <MoreHorizontal size={16} strokeWidth={2.5} />
                       </button>
                     </div>
                   </td>
@@ -155,11 +158,11 @@ export default function OrdersList() {
         </div>
         
         {/* Pagination Footer */}
-        <div className="px-6 py-4 border-t border-[#C4BEB6]/20 flex items-center justify-between text-sm font-medium text-[#1A1A1A]/60">
+        <div className="px-8 py-5 border-t border-[#EBE6E0] dark:border-white/10 flex items-center justify-between text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/50 dark:text-white/50 transition-colors">
           <p>Showing 1 to {orders.length} of {orders.length} results</p>
           <div className="flex gap-2">
-            <button className="px-4 py-2 border border-[#C4BEB6]/40 rounded-xl hover:bg-[#C4BEB6]/10 transition-colors">Previous</button>
-            <button className="px-4 py-2 border border-[#C4BEB6]/40 rounded-xl hover:bg-[#C4BEB6]/10 transition-colors">Next</button>
+            <button className="px-5 py-2.5 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-[1.2rem] hover:bg-[#FBF9F6] dark:hover:bg-white/5 transition-colors text-[#0F0E0D] dark:text-white">Previous</button>
+            <button className="px-5 py-2.5 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-[1.2rem] hover:bg-[#FBF9F6] dark:hover:bg-white/5 transition-colors text-[#0F0E0D] dark:text-white">Next</button>
           </div>
         </div>
       </motion.div>
