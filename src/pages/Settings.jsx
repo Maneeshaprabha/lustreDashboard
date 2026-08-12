@@ -1,11 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'react-router-dom'; // <--- NEW IMPORT
 import { 
   Store, User, Bell, Lock, Save, Upload, Check, Globe, Mail, Phone, Palette, Image as ImageIcon
 } from 'lucide-react';
 
 export default function Settings() {
-  const [activeTab, setActiveTab] = useState('branding'); // Defaulting to branding so you can see it right away!
+  const location = useLocation();
+
+  // Read from the router state, otherwise default to branding
+  const [activeTab, setActiveTab] = useState(location.state?.targetTab || 'branding'); 
+
+  // If the user is ALREADY on the settings page and clicks the dropdown again, force an update
+  useEffect(() => {
+    if (location.state?.targetTab) {
+      setActiveTab(location.state.targetTab);
+    }
+  }, [location.state]);
 
   // Toggle states for Notifications tab
   const [notifOrder, setNotifOrder] = useState(true);
