@@ -1,15 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Calendar, TrendingUp, ChevronDown, User, Settings, LogOut } from "lucide-react";
+import { Search, Calendar, TrendingUp, ChevronDown, User, Settings, LogOut, Menu } from "lucide-react"; // <-- Imported Menu
 import ThemeToggle from "./ThemeToggle"; 
 
-export default function Navbar({ title }) {
+export default function Navbar({ title, onMenuClick }) { // <-- Added onMenuClick prop
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef(null);
   const navigate = useNavigate();
 
-  // Close the dropdown if clicking outside of it
   useEffect(() => {
     function handleClickOutside(event) {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
@@ -26,18 +25,26 @@ export default function Navbar({ title }) {
   };
 
   return (
-    <header className="h-[72px] shrink-0 flex items-center justify-between px-6 md:px-10 bg-white/80 dark:bg-[#0A0A0A]/80 backdrop-blur-md border-b border-[#EBE6E0] dark:border-white/10 z-50 sticky top-0 transition-colors duration-300 print:hidden">
+    <header className="h-[72px] shrink-0 flex items-center justify-between px-4 md:px-10 bg-white/80 dark:bg-[#0A0A0A]/80 backdrop-blur-md border-b border-[#EBE6E0] dark:border-white/10 z-30 sticky top-0 transition-colors duration-300 print:hidden">
       
-      <div className="min-w-0">
+      <div className="flex items-center gap-3 min-w-0">
+        {/* Mobile Hamburger Menu */}
+        <button 
+          onClick={onMenuClick}
+          className="md:hidden p-2 -ml-2 text-[#0F0E0D] dark:text-white hover:bg-[#EBE6E0]/50 dark:hover:bg-white/10 rounded-xl transition-colors"
+        >
+          <Menu size={22} strokeWidth={2.5} />
+        </button>
+        
         <h1 className="text-xl font-extrabold tracking-tight text-[#0F0E0D] dark:text-white truncate transition-colors">
           {title}
         </h1>
       </div>
 
-      <div className="flex gap-4 items-center shrink-0">
+      <div className="flex gap-2 md:gap-4 items-center shrink-0">
         
         {/* Search Bar */}
-        <div className="relative hidden md:block w-64">
+        <div className="relative hidden lg:block w-64">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#0F0E0D]/40 dark:text-white/40 transition-colors" size={16} strokeWidth={2.5} />
           <input
             type="text"
@@ -47,7 +54,7 @@ export default function Navbar({ title }) {
         </div>
 
         {/* Current Profit Pill */}
-        <div className="hidden lg:flex px-4 py-2.5 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-[1.5rem] text-xs uppercase tracking-widest font-bold text-[#0F0E0D] dark:text-white hover:bg-[#FBF9F6] dark:hover:bg-white/5 transition-colors items-center gap-2 cursor-pointer whitespace-nowrap shadow-[0_5px_15px_-5px_rgba(0,0,0,0.02)]">
+        <div className="hidden xl:flex px-4 py-2.5 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-[1.5rem] text-xs uppercase tracking-widest font-bold text-[#0F0E0D] dark:text-white hover:bg-[#FBF9F6] dark:hover:bg-white/5 transition-colors items-center gap-2 cursor-pointer whitespace-nowrap shadow-[0_5px_15px_-5px_rgba(0,0,0,0.02)]">
           <TrendingUp size={14} strokeWidth={2.5} className="text-[#2E4A35] dark:text-green-400" />
           <span>$124,563</span>
         </div>
@@ -62,15 +69,15 @@ export default function Navbar({ title }) {
         <ThemeToggle />
 
         {/* User Profile & Dropdown */}
-        <div className="relative ml-1 pl-4 border-l border-[#EBE6E0] dark:border-white/10 transition-colors" ref={profileRef}>
+        <div className="relative md:ml-1 md:pl-4 border-l border-transparent md:border-[#EBE6E0] dark:md:border-white/10 transition-colors" ref={profileRef}>
           <div 
             onClick={() => setIsProfileOpen(!isProfileOpen)}
-            className="flex items-center gap-3 cursor-pointer group"
+            className="flex items-center gap-3 cursor-pointer group pl-2 md:pl-0"
           >
             <img
               src="https://i.pravatar.cc/100?img=32"
               alt="Profile"
-              className="w-10 h-10 rounded-full border-2 border-[#EBE6E0] dark:border-white/10 shadow-sm group-hover:scale-105 transition-transform object-cover"
+              className="w-9 h-9 md:w-10 md:h-10 rounded-full border-2 border-[#EBE6E0] dark:border-white/10 shadow-sm group-hover:scale-105 transition-transform object-cover"
             />
             <div className="text-sm hidden md:block">
               <p className="font-extrabold tracking-tight leading-none text-[#0F0E0D] dark:text-white transition-colors">Kamisato Aya</p>
@@ -99,7 +106,6 @@ export default function Navbar({ title }) {
                   <p className="text-[#0F0E0D]/50 dark:text-white/50 text-[9px] font-bold uppercase tracking-[0.2em] transition-colors">Manager</p>
                 </div>
 
-                {/* NOTE THE NEW STATE PROPERTY ADDED TO THESE LINKS */}
                 <Link 
                   to="/settings" 
                   state={{ targetTab: 'account' }}

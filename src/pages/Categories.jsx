@@ -59,18 +59,18 @@ export default function Categories() {
 
   return (
     <div className="w-full bg-[#FBF9F6] dark:bg-[#0A0A0A] min-h-screen transition-colors duration-300">
-      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="p-6 md:p-10 max-w-[1400px] w-full mx-auto space-y-8">
+      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="p-4 sm:p-6 md:p-10 max-w-[1400px] w-full mx-auto space-y-6 sm:space-y-8">
         
         {/* HEADER CONTROLS */}
         <motion.div variants={itemVariants} className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
           <div>
-            <h1 className="text-3xl font-extrabold text-[#0F0E0D] dark:text-white tracking-tight flex items-center gap-2 transition-colors">Product Categories</h1>
-            <p className="text-[10px] text-[#0F0E0D]/50 dark:text-white/50 font-bold uppercase tracking-[0.3em] mt-2 transition-colors">Manage your store's collections and taxonomy</p>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F0E0D] dark:text-white tracking-tight flex items-center gap-2 transition-colors">Product Categories</h1>
+            <p className="text-[10px] text-[#0F0E0D]/50 dark:text-white/50 font-bold uppercase tracking-[0.3em] mt-1 sm:mt-2 transition-colors">Manage your store's collections and taxonomy</p>
           </div>
         </motion.div>
 
         {/* TOP METRICS CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
           <StatCard 
             title="Total Categories" 
             value={categories.length} 
@@ -95,16 +95,16 @@ export default function Categories() {
           />
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 sm:gap-8">
           
           {/* CATEGORIES TABLE (LEFT COLUMN) */}
-          <motion.div variants={itemVariants} className="xl:col-span-2 bg-white dark:bg-[#111111] p-8 md:p-10 rounded-[2.5rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.03)] border border-[#EBE6E0] dark:border-white/10 overflow-hidden transition-colors">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-xl font-bold text-[#0F0E0D] dark:text-white transition-colors">Category List</h2>
+          <motion.div variants={itemVariants} className="xl:col-span-2 bg-white dark:bg-[#111111] p-6 sm:p-8 md:p-10 rounded-[2.5rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.03)] border border-[#EBE6E0] dark:border-white/10 overflow-hidden transition-colors">
+            <div className="flex justify-between items-center mb-6 sm:mb-8">
+              <h2 className="text-xl sm:text-2xl font-bold text-[#0F0E0D] dark:text-white transition-colors">Category List</h2>
             </div>
             
-            <div className="overflow-x-auto min-h-[400px]">
-              <table className="w-full text-left border-collapse">
+            <div className="overflow-x-auto min-h-[300px] sm:min-h-[400px]">
+              <table className="w-full text-left border-collapse min-w-[600px]">
                 <thead>
                   <tr className="text-[#0F0E0D]/50 dark:text-white/50 text-[9px] uppercase tracking-[0.25em] border-b border-[#EBE6E0] dark:border-white/10 transition-colors">
                     <th className="pb-5 font-bold">Category Name</th>
@@ -124,9 +124,9 @@ export default function Categories() {
                         exit={{ opacity: 0, scale: 0.95 }}
                         className="border-b border-[#EBE6E0]/60 dark:border-white/5 hover:bg-[#FBF9F6]/50 dark:hover:bg-white/5 transition-colors group"
                       >
-                        <td className="py-5">
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-2xl bg-[#FBF9F6] dark:bg-white/5 border border-[#EBE6E0] dark:border-white/10 flex items-center justify-center text-[#0F0E0D] dark:text-white transition-colors">
+                        <td className="py-4 sm:py-5">
+                          <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="w-10 h-10 shrink-0 rounded-2xl bg-[#FBF9F6] dark:bg-white/5 border border-[#EBE6E0] dark:border-white/10 flex items-center justify-center text-[#0F0E0D] dark:text-white transition-colors">
                               <FolderOpen size={16} strokeWidth={2.5} />
                             </div>
                             <div>
@@ -135,15 +135,15 @@ export default function Categories() {
                             </div>
                           </div>
                         </td>
-                        <td className="py-5 text-center font-bold text-[#0F0E0D]/70 dark:text-white/70 transition-colors">{cat.products}</td>
-                        <td className="py-5">
+                        <td className="py-4 sm:py-5 text-center font-bold text-[#0F0E0D]/70 dark:text-white/70 transition-colors">{cat.products}</td>
+                        <td className="py-4 sm:py-5">
                           <span className={`px-4 py-2 text-[9px] font-bold uppercase tracking-[0.2em] rounded-full inline-flex transition-colors ${getStatusBadge(cat.status)}`}>
                             {cat.status}
                           </span>
                         </td>
-                        <td className="py-5 font-medium text-[#0F0E0D]/60 dark:text-white/60 text-xs transition-colors">{cat.date}</td>
-                        <td className="py-5 text-center">
-                          <div className="flex justify-center items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <td className="py-4 sm:py-5 font-medium text-[#0F0E0D]/60 dark:text-white/60 text-xs transition-colors">{cat.date}</td>
+                        <td className="py-4 sm:py-5 text-center">
+                          <div className="flex justify-center items-center gap-1 sm:gap-2 opacity-100 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
                             <button className="p-2 text-[#0F0E0D]/40 dark:text-white/40 hover:text-[#0F0E0D] dark:hover:text-white transition-colors rounded-xl hover:bg-[#EBE6E0] dark:hover:bg-white/10 inline-flex">
                               <MoreHorizontal size={16} strokeWidth={2.5} />
                             </button>
@@ -169,12 +169,12 @@ export default function Categories() {
           </motion.div>
 
           {/* ADD CATEGORY FORM (RIGHT COLUMN) */}
-          <motion.div variants={itemVariants} className="bg-white dark:bg-[#111111] p-8 md:p-10 rounded-[2.5rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.03)] border border-[#EBE6E0] dark:border-white/10 flex flex-col h-fit transition-colors">
+          <motion.div variants={itemVariants} className="bg-white dark:bg-[#111111] p-6 sm:p-8 md:p-10 rounded-[2.5rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.03)] border border-[#EBE6E0] dark:border-white/10 flex flex-col h-fit transition-colors">
             <div>
-              <h2 className="text-xl font-bold text-[#0F0E0D] dark:text-white mb-2 transition-colors">Create Category</h2>
-              <p className="text-[10px] text-[#0F0E0D]/50 dark:text-white/50 font-bold uppercase tracking-[0.25em] mb-8 transition-colors">Add a new collection</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-[#0F0E0D] dark:text-white mb-2 transition-colors">Create Category</h2>
+              <p className="text-[10px] text-[#0F0E0D]/50 dark:text-white/50 font-bold uppercase tracking-[0.25em] mb-6 sm:mb-8 transition-colors">Add a new collection</p>
               
-              <form onSubmit={handleAddCategory} className="space-y-6">
+              <form onSubmit={handleAddCategory} className="space-y-5 sm:space-y-6">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 mb-3 transition-colors">Category Name</label>
                   <input 
@@ -203,7 +203,7 @@ export default function Categories() {
                   type="submit"
                   whileHover={{ scale: 1.02 }} 
                   whileTap={{ scale: 0.98 }} 
-                  className="w-full py-4 mt-4 bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D] font-extrabold uppercase tracking-widest text-[10px] rounded-2xl hover:bg-[#0F0E0D]/90 dark:hover:bg-white/90 transition-colors flex items-center justify-center gap-2 shadow-[0_10px_20px_-10px_rgba(15,14,13,0.4)] dark:shadow-[0_10px_20px_-10px_rgba(255,255,255,0.4)]"
+                  className="w-full py-4 mt-2 sm:mt-4 bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D] font-extrabold uppercase tracking-widest text-[10px] rounded-2xl hover:bg-[#0F0E0D]/90 dark:hover:bg-white/90 transition-colors flex items-center justify-center gap-2 shadow-[0_10px_20px_-10px_rgba(15,14,13,0.4)] dark:shadow-[0_10px_20px_-10px_rgba(255,255,255,0.4)]"
                 >
                   <Plus size={16} strokeWidth={3} /> Save Category
                 </motion.button>
@@ -227,7 +227,7 @@ function StatCard({ title, value, trend, icon, variants, isDark = false }) {
   return (
     <motion.div 
       variants={variants} 
-      className={`${cardBg} ${borderColor} border p-8 rounded-[2.5rem] shadow-[0_15px_35px_-10px_rgba(0,0,0,0.05)] flex flex-col justify-between min-h-[180px] relative overflow-hidden transition-colors`}
+      className={`${cardBg} ${borderColor} border p-6 sm:p-8 rounded-[2.5rem] shadow-[0_15px_35px_-10px_rgba(0,0,0,0.05)] flex flex-col justify-between min-h-[160px] sm:min-h-[180px] relative overflow-hidden transition-colors`}
     >
       <div className="flex justify-between items-start relative z-10 w-full">
         <div className={`${textColor} stroke-2 transition-colors`}>
@@ -238,23 +238,24 @@ function StatCard({ title, value, trend, icon, variants, isDark = false }) {
         </div>
       </div>
       
-      <div className="relative z-10 mt-6">
+      <div className="relative z-10 mt-5 sm:mt-6">
         <h3 className={`${titleColor} font-bold text-[10px] uppercase tracking-[0.15em] mb-1.5 transition-colors`}>{title}</h3>
-        <p className={`${textColor} text-[2.2rem] font-extrabold tracking-tight leading-none transition-colors`}>{value}</p>
+        <p className={`${textColor} text-[1.75rem] sm:text-[2.2rem] font-extrabold tracking-tight leading-none transition-colors`}>{value}</p>
       </div>
 
-      <div className="absolute -right-4 -bottom-4 pointer-events-none z-0 transition-opacity">
-        {isDark ? (
-          <svg width="150" height="100" viewBox="0 0 150 100" fill="none" className="dark:hidden">
-            <path d="M0 80C35 80 60 40 90 55C115 67.5 130 65 150 50V100H0V80Z" fill="#1C1C1C"/>
-            <path d="M20 100C45 75 80 45 110 65C130 78.3333 145 75 150 65" stroke="#2A2A2A" strokeWidth="2.5" strokeLinecap="round"/>
-          </svg>
-        ) : (
-          <svg width="150" height="100" viewBox="0 0 150 100" fill="none" className="dark:hidden">
-            <path d="M0 80C35 80 60 40 90 55C115 67.5 130 65 150 50V100H0V80Z" fill="#FAFAFA"/>
-            <path d="M20 100C45 75 80 45 110 65C130 78.3333 145 75 150 65" stroke="#E5E5E5" strokeWidth="2.5" strokeLinecap="round"/>
-          </svg>
-        )}
+      {/* Decorative Wavy Lines (Fixed Dark Mode Logic) */}
+      <div className="absolute -right-4 -bottom-4 pointer-events-none z-0">
+        <svg width="150" height="100" viewBox="0 0 150 100" fill="none">
+          <path 
+            d="M0 80C35 80 60 40 90 55C115 67.5 130 65 150 50V100H0V80Z" 
+            className={`transition-colors duration-300 ${isDark ? 'fill-[#1C1C1C] dark:fill-[#D5CBB9]' : 'fill-[#FAFAFA] dark:fill-[#151515]'}`}
+          />
+          <path 
+            d="M20 100C45 75 80 45 110 65C130 78.3333 145 75 150 65" 
+            className={`transition-colors duration-300 stroke-[2.5px] ${isDark ? 'stroke-[#2A2A2A] dark:stroke-[#C4BEB6]' : 'stroke-[#E5E5E5] dark:stroke-[#1F1F1F]'}`}
+            strokeLinecap="round"
+          />
+        </svg>
       </div>
     </motion.div>
   );

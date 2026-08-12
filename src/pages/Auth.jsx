@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, ArrowRight } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight} from 'lucide-react';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -52,17 +52,19 @@ export default function Auth() {
       </div>
 
       {/* RIGHT PANEL - Auth Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 md:p-16 relative">
-        {/* Mobile Logo */}
-        <div className="absolute top-8 left-8 flex items-center gap-3 lg:hidden">
-          <div className="w-10 h-10 bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D] flex items-center justify-center rounded-xl font-extrabold text-xl transition-colors">
-            L
-          </div>
-        </div>
-
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-10 md:p-16 relative">
         <div className="w-full max-w-md">
+          
+          {/* Mobile Logo (Only visible on small screens) */}
+          <div className="flex items-center gap-3 lg:hidden mb-10">
+            <div className="w-10 h-10 bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D] flex items-center justify-center rounded-xl font-extrabold text-xl transition-colors">
+              L
+            </div>
+            <span className="text-xl font-extrabold tracking-widest text-[#0F0E0D] dark:text-white transition-colors">LUSTRE</span>
+          </div>
+
           {/* Toggle Switch */}
-          <div className="flex p-1 bg-[#EBE6E0]/50 dark:bg-white/5 rounded-2xl mb-12 transition-colors">
+          <div className="flex p-1 bg-[#EBE6E0]/50 dark:bg-white/5 rounded-2xl mb-8 sm:mb-12 transition-colors">
             <button 
               onClick={() => setIsLogin(true)}
               className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-xl transition-all duration-300 ${isLogin ? 'bg-white dark:bg-[#111111] text-[#0F0E0D] dark:text-white shadow-sm' : 'text-[#0F0E0D]/50 dark:text-white/50 hover:text-[#0F0E0D] dark:hover:text-white'}`}
@@ -77,8 +79,8 @@ export default function Auth() {
             </button>
           </div>
 
-          <div className="mb-10">
-            <h1 className="text-3xl font-extrabold text-[#0F0E0D] dark:text-white tracking-tight mb-2 transition-colors">
+          <div className="mb-8 sm:mb-10">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F0E0D] dark:text-white tracking-tight mb-2 transition-colors">
               {isLogin ? "Sign in to Lustre" : "Create your account"}
             </h1>
             <p className="text-sm text-[#0F0E0D]/60 dark:text-white/60 font-medium transition-colors">
@@ -86,7 +88,7 @@ export default function Auth() {
             </p>
           </div>
 
-          <form onSubmit={handleAuth} className="space-y-5">
+          <form onSubmit={handleAuth} className="space-y-4 sm:space-y-5">
             <AnimatePresence mode="popLayout">
               {!isLogin && (
                 <motion.div
@@ -154,15 +156,15 @@ export default function Auth() {
 
           {/* Social Logins */}
           <div className="mt-10">
-            <div className="relative flex items-center justify-center mb-8">
+            <div className="relative flex items-center justify-center mb-6 sm:mb-8">
               <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[#EBE6E0] dark:border-white/10 transition-colors"></div></div>
               <div className="relative bg-[#FBF9F6] dark:bg-[#0A0A0A] px-4 text-[10px] font-bold uppercase tracking-widest text-[#0F0E0D]/40 dark:text-white/40 transition-colors">
                 Or continue with
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <button className="flex items-center justify-center gap-2 py-3.5 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-2xl text-xs font-bold text-[#0F0E0D] dark:text-white hover:bg-[#EBE6E0]/50 dark:hover:bg-white/5 transition-colors shadow-sm">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <button className="flex items-center justify-center gap-2 py-3.5 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-2xl text-[10px] sm:text-xs font-bold text-[#0F0E0D] dark:text-white hover:bg-[#EBE6E0]/50 dark:hover:bg-white/5 transition-colors shadow-sm">
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                   <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -171,7 +173,7 @@ export default function Auth() {
                 </svg>
                 Google
               </button>
-            \
+             
             </div>
           </div>
           

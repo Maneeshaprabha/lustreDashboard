@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Sidebar from "./Sidebar";
@@ -6,17 +6,18 @@ import Navbar from "./Navbar";
 
 export default function DashboardLayout() {
   const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const getPageInfo = () => {
     switch (location.pathname) {
       case "/add-product": return { active: "Product", title: "Add New Product" };
       case "/products":    return { active: "Product", title: "Product Inventory" };
+      case "/categories":  return { active: "Categories", title: "Product Categories" };
       case "/analytics":   return { active: "Analytics", title: "Performance Analytics" };
       case "/sales":       return { active: "Sales", title: "Sales & Transactions" };
+      case "/expenses":    return { active: "Expenses", title: "Extra Bills & Expenses" };
       case "/orders":      return { active: "Orders", title: "Order Management" };
       case "/add-order":   return { active: "Orders", title: "Add New Order" };
-      case "/expenses":    return { active: "Expenses", title: "Extra Bills & Expenses" };
-      case "/categories":  return { active: "Categories", title: "Product Categories" };
       case "/settings":    return { active: "Setting", title: "Global Settings" };
       case "/overview":
       default:             return { active: "Overview", title: "Dashboard Overview" };
@@ -26,15 +27,31 @@ export default function DashboardLayout() {
   const { active, title } = getPageInfo();
 
   return (
-    // Updated with dark mode classes for the root layout container
     <div className="flex h-screen w-screen bg-[#FBF9F6] dark:bg-[#0A0A0A] text-[#0F0E0D] dark:text-white font-sans antialiased overflow-hidden transition-colors duration-300">
       
-      <Sidebar activePage={active} />
+      {/* Dark Overlay for Mobile */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm transition-opacity"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar now receives the mobile toggle state */}
+      <Sidebar 
+        activePage={active} 
+        isOpen={isMobileMenuOpen} 
+        onClose={() => setIsMobileMenuOpen(false)} 
+      />
 
       {/* Main column */}
       <main className="flex-1 flex flex-col h-full relative min-w-0">
         
-        <Navbar title={title} />
+        {/* Navbar now has a hamburger menu button */}
+        <Navbar 
+          title={title} 
+          onMenuClick={() => setIsMobileMenuOpen(true)} 
+        />
 
         {/* Scrollable content area */}
         <div className="flex-1 overflow-y-auto w-full relative scroll-smooth">

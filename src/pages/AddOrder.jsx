@@ -95,29 +95,29 @@ export default function AddOrder() {
 
   return (
     <>
-      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="p-6 md:p-10 max-w-[1400px] w-full mx-auto space-y-6 pb-24 print:hidden transition-colors duration-300">
+      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="p-4 sm:p-6 md:p-10 max-w-[1400px] w-full mx-auto space-y-6 pb-24 print:hidden transition-colors duration-300">
         
         {/* Top Action Header */}
-        <motion.div variants={itemVariants} className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <motion.div variants={itemVariants} className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-6">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => navigate(-1)}
-              className="w-12 h-12 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-full flex items-center justify-center text-[#0F0E0D] dark:text-white hover:bg-[#FBF9F6] dark:hover:bg-white/5 transition-colors shadow-sm"
+              className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-full flex items-center justify-center text-[#0F0E0D] dark:text-white hover:bg-[#FBF9F6] dark:hover:bg-white/5 transition-colors shadow-sm"
             >
               <ArrowLeft size={20} strokeWidth={2.5} />
             </button>
             <div>
-              <h1 className="text-3xl font-extrabold text-[#0F0E0D] dark:text-white tracking-tight flex items-center gap-2 transition-colors">Create Manual Order</h1>
-              <p className="text-[10px] text-[#0F0E0D]/50 dark:text-white/50 font-bold uppercase tracking-[0.3em] mt-2 transition-colors">Draft a new transaction</p>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F0E0D] dark:text-white tracking-tight flex items-center gap-2 transition-colors">Create Manual Order</h1>
+              <p className="text-[10px] text-[#0F0E0D]/50 dark:text-white/50 font-bold uppercase tracking-[0.3em] mt-1 sm:mt-2 transition-colors">Draft a new transaction</p>
             </div>
           </div>
           
-          <div className="flex gap-3">
+          <div className="flex gap-3 w-full md:w-auto mt-2 md:mt-0">
             <motion.button 
               onClick={() => navigate(-1)}
               whileHover={{ scale: 1.02 }} 
               whileTap={{ scale: 0.98 }} 
-              className="px-6 py-3 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-[1.5rem] text-[10px] uppercase tracking-widest font-bold text-[#0F0E0D] dark:text-white hover:bg-[#FBF9F6] dark:hover:bg-white/5 transition-colors shadow-sm"
+              className="flex-1 md:flex-none justify-center px-6 py-3.5 sm:py-3 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-[1.5rem] text-[10px] uppercase tracking-widest font-bold text-[#0F0E0D] dark:text-white hover:bg-[#FBF9F6] dark:hover:bg-white/5 transition-colors shadow-sm flex items-center"
             >
               Cancel
             </motion.button>
@@ -125,9 +125,9 @@ export default function AddOrder() {
               onClick={handleSaveOrder}
               whileHover={{ scale: 1.02 }} 
               whileTap={{ scale: 0.98 }} 
-              className="px-6 py-3 bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D] rounded-[1.5rem] text-[10px] uppercase tracking-widest font-bold flex items-center gap-2 shadow-[0_10px_20px_-10px_rgba(15,14,13,0.4)] dark:shadow-[0_10px_20px_-10px_rgba(255,255,255,0.4)] hover:bg-[#0F0E0D]/90 dark:hover:bg-white/90 transition-colors"
+              className="flex-1 md:flex-none justify-center px-6 py-3.5 sm:py-3 bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D] rounded-[1.5rem] text-[10px] uppercase tracking-widest font-bold flex items-center gap-2 shadow-[0_10px_20px_-10px_rgba(15,14,13,0.4)] dark:shadow-[0_10px_20px_-10px_rgba(255,255,255,0.4)] hover:bg-[#0F0E0D]/90 dark:hover:bg-white/90 transition-colors"
             >
-              <Check size={16} strokeWidth={3} /> Save Order
+              <Check size={16} strokeWidth={3} /> Save
             </motion.button>
           </div>
         </motion.div>
@@ -138,8 +138,8 @@ export default function AddOrder() {
           <div className="xl:col-span-2 space-y-6">
             
             {/* System Details */}
-            <motion.div variants={itemVariants} className="bg-white dark:bg-[#111111] p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-[#EBE6E0] dark:border-white/10 transition-colors">
-              <h2 className="text-2xl font-bold text-[#0F0E0D] dark:text-white tracking-tight mb-8 transition-colors">System Details</h2>
+            <motion.div variants={itemVariants} className="bg-white dark:bg-[#111111] p-6 sm:p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-[#EBE6E0] dark:border-white/10 transition-colors">
+              <h2 className="text-xl sm:text-2xl font-bold text-[#0F0E0D] dark:text-white tracking-tight mb-6 sm:mb-8 transition-colors">System Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 mb-3 transition-colors">
@@ -157,8 +157,8 @@ export default function AddOrder() {
             </motion.div>
 
             {/* Customer Details */}
-            <motion.div variants={itemVariants} className="bg-white dark:bg-[#111111] p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-[#EBE6E0] dark:border-white/10 transition-colors">
-              <h2 className="text-2xl font-bold text-[#0F0E0D] dark:text-white tracking-tight flex items-center gap-3 mb-8 transition-colors">
+            <motion.div variants={itemVariants} className="bg-white dark:bg-[#111111] p-6 sm:p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-[#EBE6E0] dark:border-white/10 transition-colors">
+              <h2 className="text-xl sm:text-2xl font-bold text-[#0F0E0D] dark:text-white tracking-tight flex items-center gap-3 mb-6 sm:mb-8 transition-colors">
                 <User size={24} /> Customer Details
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -184,8 +184,8 @@ export default function AddOrder() {
             </motion.div>
 
             {/* Shipping Configuration */}
-            <motion.div variants={itemVariants} className="bg-white dark:bg-[#111111] p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-[#EBE6E0] dark:border-white/10 transition-colors">
-              <h2 className="text-2xl font-bold text-[#0F0E0D] dark:text-white tracking-tight flex items-center gap-3 mb-8 transition-colors"><MapPin size={24} /> Shipping Configuration</h2>
+            <motion.div variants={itemVariants} className="bg-white dark:bg-[#111111] p-6 sm:p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-[#EBE6E0] dark:border-white/10 transition-colors">
+              <h2 className="text-xl sm:text-2xl font-bold text-[#0F0E0D] dark:text-white tracking-tight flex items-center gap-3 mb-6 sm:mb-8 transition-colors"><MapPin size={24} /> Shipping Configuration</h2>
               <div className="space-y-6 mb-8">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 mb-3 transition-colors">Street Address</label>
@@ -242,8 +242,8 @@ export default function AddOrder() {
             </motion.div>
 
             {/* Order Status */}
-            <motion.div variants={itemVariants} className="bg-white dark:bg-[#111111] p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-[#EBE6E0] dark:border-white/10 transition-colors">
-              <h2 className="text-2xl font-bold text-[#0F0E0D] dark:text-white tracking-tight mb-8 transition-colors">Order Status</h2>
+            <motion.div variants={itemVariants} className="bg-white dark:bg-[#111111] p-6 sm:p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-[#EBE6E0] dark:border-white/10 transition-colors">
+              <h2 className="text-xl sm:text-2xl font-bold text-[#0F0E0D] dark:text-white tracking-tight mb-6 sm:mb-8 transition-colors">Order Status</h2>
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 mb-3 transition-colors">Current Status</label>
@@ -259,8 +259,8 @@ export default function AddOrder() {
                   </select>
                 </div>
                 {orderStatus === 'shipped' && (
-                  <div className="p-5 bg-[#F4F8F4] dark:bg-green-500/10 border border-[#E2EBE2] dark:border-green-500/20 rounded-2xl mt-4 transition-colors">
-                    <p className="text-xs font-bold text-[#2E4A35] dark:text-green-400">
+                  <div className="p-4 sm:p-5 bg-[#F4F8F4] dark:bg-green-500/10 border border-[#E2EBE2] dark:border-green-500/20 rounded-2xl mt-4 transition-colors">
+                    <p className="text-[10px] sm:text-xs font-bold text-[#2E4A35] dark:text-green-400">
                       ✓ Saving this order will automatically generate a final invoice.
                     </p>
                   </div>
@@ -273,9 +273,9 @@ export default function AddOrder() {
           <div className="space-y-6">
             
             {/* Order Items Cart */}
-            <motion.div variants={itemVariants} className="bg-white dark:bg-[#111111] p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-[#EBE6E0] dark:border-white/10 transition-colors">
-              <div className="flex justify-between items-center mb-8">
-                <h2 className="text-2xl font-bold text-[#0F0E0D] dark:text-white tracking-tight flex items-center gap-3 transition-colors"><ShoppingCart size={24} /> Order Items</h2>
+            <motion.div variants={itemVariants} className="bg-white dark:bg-[#111111] p-6 sm:p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-[#EBE6E0] dark:border-white/10 transition-colors">
+              <div className="flex justify-between items-center mb-6 sm:mb-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-[#0F0E0D] dark:text-white tracking-tight flex items-center gap-3 transition-colors"><ShoppingCart size={24} /> Order Items</h2>
                 <span className="bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D] text-xs font-bold px-3 py-1.5 rounded-full transition-colors">{orderItems.length}</span>
               </div>
               
@@ -296,9 +296,9 @@ export default function AddOrder() {
                       className="flex gap-4 p-4 rounded-2xl border border-[#EBE6E0] dark:border-white/10 bg-[#FBF9F6] dark:bg-white/5 shadow-sm relative group transition-colors"
                     >
                       <img src={item.product.img} className="w-16 h-16 rounded-xl object-cover border border-[#EBE6E0] dark:border-transparent" alt={item.product.name} />
-                      <div className="flex-1 flex flex-col justify-center">
-                        <h4 className="text-sm font-extrabold text-[#0F0E0D] dark:text-white leading-tight pr-6 transition-colors">{item.product.name}</h4>
-                        <div className="flex items-center gap-2 mt-1.5">
+                      <div className="flex-1 flex flex-col justify-center pr-6">
+                        <h4 className="text-sm font-extrabold text-[#0F0E0D] dark:text-white leading-tight transition-colors">{item.product.name}</h4>
+                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                           <span className="text-[10px] uppercase tracking-widest font-bold text-[#0F0E0D]/60 dark:text-white/60 transition-colors">Size: {item.size}</span>
                           <span className="text-[10px] uppercase tracking-widest font-bold text-[#0F0E0D]/60 dark:text-white/60 flex items-center gap-1 transition-colors">
                             Color: <div className="w-2.5 h-2.5 rounded-full border border-black/10 dark:border-white/20" style={{ backgroundColor: item.color }}></div>
@@ -330,14 +330,14 @@ export default function AddOrder() {
                 </div>
                 <div className="flex justify-between items-center pt-5 border-t border-[#EBE6E0] dark:border-white/10 transition-colors">
                   <span className="font-extrabold uppercase tracking-widest text-[#0F0E0D] dark:text-white text-xs transition-colors">Total Amount</span>
-                  <span className="text-3xl font-extrabold text-[#0F0E0D] dark:text-white tracking-tight transition-colors">${finalTotal.toFixed(2)}</span>
+                  <span className="text-2xl sm:text-3xl font-extrabold text-[#0F0E0D] dark:text-white tracking-tight transition-colors">${finalTotal.toFixed(2)}</span>
                 </div>
               </div>
             </motion.div>
 
             {/* Product Picker */}
-            <motion.div variants={itemVariants} className="bg-white dark:bg-[#111111] p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-[#EBE6E0] dark:border-white/10 transition-colors">
-              <h2 className="text-2xl font-bold text-[#0F0E0D] dark:text-white tracking-tight flex items-center gap-3 mb-8 transition-colors"><Package size={24} /> Add Product</h2>
+            <motion.div variants={itemVariants} className="bg-white dark:bg-[#111111] p-6 sm:p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-[#EBE6E0] dark:border-white/10 transition-colors">
+              <h2 className="text-xl sm:text-2xl font-bold text-[#0F0E0D] dark:text-white tracking-tight flex items-center gap-3 mb-6 sm:mb-8 transition-colors"><Package size={24} /> Add Product</h2>
               <div className="space-y-8">
                 
                 <div>
@@ -347,13 +347,13 @@ export default function AddOrder() {
                       <div 
                         key={prod.id} 
                         onClick={() => { setSelectedProduct(prod); setActiveColor(prod.colors[0]); }}
-                        className={`min-w-[80px] cursor-pointer rounded-2xl overflow-hidden border-2 transition-all duration-300 ${selectedProduct.id === prod.id ? 'border-[#0F0E0D] dark:border-white shadow-md scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                        className={`min-w-[80px] cursor-pointer rounded-2xl overflow-hidden border-2 transition-all duration-300 shrink-0 ${selectedProduct.id === prod.id ? 'border-[#0F0E0D] dark:border-white shadow-md scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`}
                       >
                         <img src={prod.img} className="w-full h-24 object-cover" alt={prod.name} />
                       </div>
                     ))}
                   </div>
-                  <div className="mt-4 flex justify-between items-center bg-[#FBF9F6] dark:bg-white/5 p-4 rounded-2xl border border-[#EBE6E0] dark:border-white/10 transition-colors">
+                  <div className="mt-4 flex flex-col sm:flex-row justify-between sm:items-center gap-2 bg-[#FBF9F6] dark:bg-white/5 p-4 rounded-2xl border border-[#EBE6E0] dark:border-white/10 transition-colors">
                     <span className="text-sm font-extrabold text-[#0F0E0D] dark:text-white truncate pr-4 transition-colors">{selectedProduct.name}</span>
                     <span className="text-sm font-bold text-[#0F0E0D] dark:text-white transition-colors">${selectedProduct.price.toFixed(2)}</span>
                   </div>
@@ -386,8 +386,9 @@ export default function AddOrder() {
                   </div>
                 </div>
 
-                <div className="flex gap-4 items-end pt-2">
-                  <div className="w-24 shrink-0">
+                {/* Mobile Responsive Quantity & Add Button */}
+                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end pt-2">
+                  <div className="w-full sm:w-24 shrink-0">
                     <label className="block text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 mb-4 transition-colors">Quantity</label>
                     <input 
                       type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} min="1" 
@@ -396,7 +397,7 @@ export default function AddOrder() {
                   </div>
                   <button 
                     onClick={handleAddItem}
-                    className="flex-1 py-4 bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D] font-extrabold uppercase tracking-widest text-[10px] rounded-2xl hover:bg-[#0F0E0D]/90 dark:hover:bg-white/90 transition-colors flex items-center justify-center gap-2"
+                    className="w-full sm:flex-1 py-4 bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D] font-extrabold uppercase tracking-widest text-[10px] rounded-2xl hover:bg-[#0F0E0D]/90 dark:hover:bg-white/90 transition-colors flex items-center justify-center gap-2"
                   >
                     <Plus size={16} strokeWidth={3} /> Add to Order
                   </button>
@@ -416,34 +417,34 @@ export default function AddOrder() {
           >
             <motion.div 
               initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-              className="bg-white dark:bg-[#111111] w-full max-w-3xl rounded-[2.5rem] shadow-2xl overflow-hidden relative print:shadow-none print:rounded-none transition-colors"
+              className="bg-white dark:bg-[#111111] w-full max-w-3xl rounded-[2.5rem] shadow-2xl overflow-hidden relative my-auto print:my-0 print:shadow-none print:rounded-none transition-colors"
             >
               {/* Modal Controls (Hidden in Print) */}
-              <div className="flex justify-between items-center p-6 md:px-10 border-b border-[#EBE6E0] dark:border-white/10 bg-[#FBF9F6] dark:bg-white/5 print:hidden transition-colors">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-6 md:px-10 border-b border-[#EBE6E0] dark:border-white/10 bg-[#FBF9F6] dark:bg-white/5 print:hidden transition-colors">
                 <h2 className="text-xl font-bold text-[#0F0E0D] dark:text-white transition-colors">Order Invoice Generated</h2>
-                <div className="flex gap-3">
-                  <button onClick={handlePrintInvoice} className="px-6 py-2.5 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/20 rounded-full text-xs font-bold uppercase tracking-widest text-[#0F0E0D] dark:text-white hover:bg-[#FBF9F6] dark:hover:bg-white/5 flex items-center gap-2 transition-colors">
+                <div className="flex gap-3 w-full sm:w-auto justify-end">
+                  <button onClick={handlePrintInvoice} className="flex-1 sm:flex-none justify-center px-6 py-2.5 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/20 rounded-full text-xs font-bold uppercase tracking-widest text-[#0F0E0D] dark:text-white hover:bg-[#FBF9F6] dark:hover:bg-white/5 flex items-center gap-2 transition-colors">
                     <Printer size={16} strokeWidth={2.5} /> Print / PDF
                   </button>
-                  <button onClick={() => navigate('/orders')} className="w-10 h-10 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/20 rounded-full flex items-center justify-center text-[#0F0E0D] dark:text-white hover:bg-[#FFF4F4] dark:hover:bg-red-500/20 hover:text-[#6A3131] dark:hover:text-red-400 transition-colors">
+                  <button onClick={() => navigate('/orders')} className="w-10 h-10 shrink-0 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/20 rounded-full flex items-center justify-center text-[#0F0E0D] dark:text-white hover:bg-[#FFF4F4] dark:hover:bg-red-500/20 hover:text-[#6A3131] dark:hover:text-red-400 transition-colors">
                     <X size={18} strokeWidth={2.5} />
                   </button>
                 </div>
               </div>
 
               {/* Printable Invoice Document */}
-              <div className="p-10 md:p-14 bg-white dark:bg-[#111111] print:bg-white text-[#0F0E0D] dark:text-white print:text-black transition-colors">
+              <div className="p-6 sm:p-10 md:p-14 bg-white dark:bg-[#111111] print:bg-white text-[#0F0E0D] dark:text-white print:text-black transition-colors">
                 
                 {/* Header */}
-                <div className="flex justify-between items-start mb-16">
+                <div className="flex flex-col sm:flex-row print:flex-row justify-between items-start gap-8 sm:gap-0 mb-10 sm:mb-16">
                   <div>
                     <div className="w-12 h-12 bg-[#0F0E0D] dark:bg-white print:bg-black text-[#FBF9F6] dark:text-[#0F0E0D] print:text-white flex items-center justify-center rounded-xl font-extrabold text-2xl mb-4 transition-colors">L</div>
                     <h1 className="text-3xl font-extrabold tracking-widest text-[#0F0E0D] dark:text-white print:text-black transition-colors">LUSTRE</h1>
                     <p className="text-[#0F0E0D]/60 dark:text-white/60 print:text-black/60 text-sm mt-2 transition-colors">124 Fashion Ave, NY 10001</p>
                     <p className="text-[#0F0E0D]/60 dark:text-white/60 print:text-black/60 text-sm transition-colors">hello@lustre.com</p>
                   </div>
-                  <div className="text-right">
-                    <h2 className="text-5xl font-extrabold text-[#EBE6E0] dark:text-white/10 print:text-gray-300 uppercase tracking-wider mb-6 transition-colors">Invoice</h2>
+                  <div className="text-left sm:text-right print:text-right">
+                    <h2 className="text-4xl sm:text-5xl font-extrabold text-[#EBE6E0] dark:text-white/10 print:text-gray-300 uppercase tracking-wider mb-6 transition-colors">Invoice</h2>
                     <p className="text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/50 dark:text-white/50 print:text-black/50 transition-colors">Invoice Number</p>
                     <p className="text-lg font-bold text-[#0F0E0D] dark:text-white print:text-black mb-3 transition-colors">{autoId}</p>
                     <p className="text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/50 dark:text-white/50 print:text-black/50 transition-colors">Date</p>
@@ -452,7 +453,7 @@ export default function AddOrder() {
                 </div>
 
                 {/* Billing Info */}
-                <div className="grid grid-cols-2 gap-8 mb-12 border-t border-b border-[#EBE6E0] dark:border-white/10 print:border-gray-200 py-8 transition-colors">
+                <div className="grid grid-cols-1 sm:grid-cols-2 print:grid-cols-2 gap-8 mb-10 sm:mb-12 border-y border-[#EBE6E0] dark:border-white/10 print:border-gray-200 py-8 transition-colors">
                   <div>
                     <p className="text-[10px] font-bold text-[#0F0E0D]/50 dark:text-white/50 print:text-black/50 uppercase tracking-[0.2em] mb-4 transition-colors">Billed To</p>
                     <p className="font-extrabold text-xl text-[#0F0E0D] dark:text-white print:text-black transition-colors">{customer.firstName || 'Customer Name'} {customer.lastName}</p>
@@ -460,43 +461,45 @@ export default function AddOrder() {
                     <p className="text-sm font-medium text-[#0F0E0D]/70 dark:text-white/70 print:text-black/70 transition-colors">{customer.city || 'City'}, {customer.state || 'ST'} {customer.zip || '00000'}</p>
                     <p className="text-sm font-bold text-[#0F0E0D]/70 dark:text-white/70 print:text-black/70 mt-3 transition-colors">{customer.email || 'email@example.com'}</p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-left sm:text-right print:text-right">
                     <p className="text-[10px] font-bold text-[#0F0E0D]/50 dark:text-white/50 print:text-black/50 uppercase tracking-[0.2em] mb-4 transition-colors">Payment Info</p>
                     <p className="text-sm font-bold text-[#0F0E0D] dark:text-white print:text-black transition-colors">Status: <span className="text-[#2E4A35] dark:text-green-400 print:text-green-700 ml-1">Paid (Shipped)</span></p>
                     <p className="text-sm font-medium text-[#0F0E0D]/70 dark:text-white/70 print:text-black/70 mt-2 transition-colors">Via Credit Card</p>
                   </div>
                 </div>
 
-                {/* Items Table */}
-                <table className="w-full text-left border-collapse mb-10">
-                  <thead>
-                    <tr className="border-b-2 border-[#0F0E0D] dark:border-white print:border-black transition-colors">
-                      <th className="py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[#0F0E0D]/60 dark:text-white/60 print:text-black/60 transition-colors">Description</th>
-                      <th className="py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[#0F0E0D]/60 dark:text-white/60 print:text-black/60 text-center transition-colors">Qty</th>
-                      <th className="py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[#0F0E0D]/60 dark:text-white/60 print:text-black/60 text-right transition-colors">Unit Price</th>
-                      <th className="py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[#0F0E0D]/60 dark:text-white/60 print:text-black/60 text-right transition-colors">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {orderItems.length > 0 ? orderItems.map((item, idx) => (
-                      <tr key={idx} className="border-b border-[#EBE6E0] dark:border-white/10 print:border-gray-200 transition-colors">
-                        <td className="py-6">
-                          <p className="font-extrabold text-sm text-[#0F0E0D] dark:text-white print:text-black transition-colors">{item.product.name}</p>
-                          <p className="text-xs font-bold text-[#0F0E0D]/50 dark:text-white/50 print:text-black/50 mt-1 transition-colors">Size: {item.size} | Color: {item.color}</p>
-                        </td>
-                        <td className="py-6 text-sm font-bold text-center text-[#0F0E0D]/80 dark:text-white/80 print:text-black/80 transition-colors">{item.qty}</td>
-                        <td className="py-6 text-sm font-bold text-right text-[#0F0E0D]/80 dark:text-white/80 print:text-black/80 transition-colors">${item.product.price.toFixed(2)}</td>
-                        <td className="py-6 text-sm font-extrabold text-right text-[#0F0E0D] dark:text-white print:text-black transition-colors">${(item.product.price * item.qty).toFixed(2)}</td>
+                {/* Items Table - Wrapped for horizontal scrolling on mobile */}
+                <div className="overflow-x-auto w-full mb-10 pb-4">
+                  <table className="w-full min-w-[500px] text-left border-collapse">
+                    <thead>
+                      <tr className="border-b-2 border-[#0F0E0D] dark:border-white print:border-black transition-colors">
+                        <th className="py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[#0F0E0D]/60 dark:text-white/60 print:text-black/60 transition-colors">Description</th>
+                        <th className="py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[#0F0E0D]/60 dark:text-white/60 print:text-black/60 text-center transition-colors">Qty</th>
+                        <th className="py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[#0F0E0D]/60 dark:text-white/60 print:text-black/60 text-right transition-colors">Unit Price</th>
+                        <th className="py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[#0F0E0D]/60 dark:text-white/60 print:text-black/60 text-right transition-colors">Amount</th>
                       </tr>
-                    )) : (
-                      <tr><td colSpan="4" className="py-8 text-center text-sm font-bold text-[#0F0E0D]/40 dark:text-white/40 print:text-black/40 transition-colors">No items in this order.</td></tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {orderItems.length > 0 ? orderItems.map((item, idx) => (
+                        <tr key={idx} className="border-b border-[#EBE6E0] dark:border-white/10 print:border-gray-200 transition-colors">
+                          <td className="py-6">
+                            <p className="font-extrabold text-sm text-[#0F0E0D] dark:text-white print:text-black transition-colors">{item.product.name}</p>
+                            <p className="text-xs font-bold text-[#0F0E0D]/50 dark:text-white/50 print:text-black/50 mt-1 transition-colors">Size: {item.size} | Color: {item.color}</p>
+                          </td>
+                          <td className="py-6 text-sm font-bold text-center text-[#0F0E0D]/80 dark:text-white/80 print:text-black/80 transition-colors">{item.qty}</td>
+                          <td className="py-6 text-sm font-bold text-right text-[#0F0E0D]/80 dark:text-white/80 print:text-black/80 transition-colors">${item.product.price.toFixed(2)}</td>
+                          <td className="py-6 text-sm font-extrabold text-right text-[#0F0E0D] dark:text-white print:text-black transition-colors">${(item.product.price * item.qty).toFixed(2)}</td>
+                        </tr>
+                      )) : (
+                        <tr><td colSpan="4" className="py-8 text-center text-sm font-bold text-[#0F0E0D]/40 dark:text-white/40 print:text-black/40 transition-colors">No items in this order.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
 
                 {/* Totals */}
                 <div className="flex justify-end">
-                  <div className="w-full max-w-xs space-y-4">
+                  <div className="w-full sm:max-w-xs space-y-4">
                     <div className="flex justify-between text-sm">
                       <span className="font-bold text-[#0F0E0D]/60 dark:text-white/60 print:text-black/60 transition-colors">Subtotal</span>
                       <span className="font-bold text-[#0F0E0D] dark:text-white print:text-black transition-colors">${subTotal.toFixed(2)}</span>
@@ -513,7 +516,7 @@ export default function AddOrder() {
                 </div>
                 
                 {/* Footer Message */}
-                <div className="mt-20 text-center text-[10px] font-bold text-[#0F0E0D]/40 dark:text-white/40 print:text-black/40 uppercase tracking-[0.3em] transition-colors">
+                <div className="mt-16 sm:mt-20 text-center text-[10px] font-bold text-[#0F0E0D]/40 dark:text-white/40 print:text-black/40 uppercase tracking-[0.3em] transition-colors">
                   Thank you for shopping with Lustre.
                 </div>
               </div>
