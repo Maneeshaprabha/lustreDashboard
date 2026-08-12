@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Receipt, TrendingDown, Plus, Trash2, PackageSearch, Tag, MoreVertical, CreditCard, Box
+  Receipt, TrendingDown, Plus, Trash2, Tag, Box, X
 } from 'lucide-react';
 
 export default function Expenses() {
+  // Expense Data State
   const [expenses, setExpenses] = useState([
     { id: '#EXP-001', item: 'Matte Black Courier Bags (500pcs)', category: 'Packaging', date: 'Aug 10, 2026', amount: 125.00 },
     { id: '#EXP-002', item: 'Premium Business Cards', category: 'Branding', date: 'Aug 09, 2026', amount: 85.50 },
@@ -13,9 +14,14 @@ export default function Expenses() {
     { id: '#EXP-005', item: 'Branded Tissue Paper', category: 'Packaging', date: 'Jul 28, 2026', amount: 110.00 },
   ]);
 
+  // Categories State (Dynamic)
+  const [categories, setCategories] = useState(['Packaging', 'Branding', 'Office Supplies', 'Logistics', 'Miscellaneous']);
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [customCategory, setCustomCategory] = useState('');
+
   // Form State
   const [newItem, setNewItem] = useState('');
-  const [newCategory, setNewCategory] = useState('Packaging');
+  const [newCategory, setNewCategory] = useState(categories[0]);
   const [newAmount, setNewAmount] = useState('');
 
   const containerVariants = {
@@ -28,6 +34,7 @@ export default function Expenses() {
     visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
   };
 
+  // Handle adding a new main expense
   const handleAddExpense = (e) => {
     e.preventDefault();
     if (!newItem || !newAmount) return;
@@ -45,17 +52,30 @@ export default function Expenses() {
     setNewAmount('');
   };
 
+  // Handle adding a brand new custom category
+  const handleAddCustomCategory = () => {
+    if (customCategory.trim() && !categories.includes(customCategory.trim())) {
+      const formattedCategory = customCategory.trim();
+      setCategories([...categories, formattedCategory]);
+      setNewCategory(formattedCategory); // Automatically select it
+    }
+    setCustomCategory('');
+    setShowAddCategory(false);
+  };
+
   const handleDelete = (idToRemove) => {
     setExpenses(expenses.filter(exp => exp.id !== idToRemove));
   };
 
   const totalSpent = expenses.reduce((sum, exp) => sum + exp.amount, 0);
 
+  // Dynamic badge styling based on category
   const getCategoryStyle = (category) => {
     switch(category) {
-      case 'Packaging': return 'bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D]';
+      case 'Packaging': return 'bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D] border border-transparent';
       case 'Branding': return 'bg-[#FBF9F6] dark:bg-white/10 border border-[#EBE6E0] dark:border-white/20 text-[#0F0E0D] dark:text-white';
-      default: return 'bg-[#EBE6E0]/50 dark:bg-white/5 text-[#0F0E0D] dark:text-white';
+      case 'Office Supplies': return 'bg-[#F4F8F4] dark:bg-green-500/20 text-[#2E4A35] dark:text-green-400 border border-[#E2EBE2] dark:border-green-500/30';
+      default: return 'bg-[#EBE6E0]/50 dark:bg-white/5 border border-transparent text-[#0F0E0D] dark:text-white';
     }
   };
 
@@ -76,21 +96,21 @@ export default function Expenses() {
           <StatCard 
             title="Total Expenses" 
             value={`$${totalSpent.toFixed(2)}`} 
-            trend="This Month" 
+            trend="All Time" 
             icon={<Receipt size={24} />} 
             variants={itemVariants} 
             isDark={true} 
           />
           <StatCard 
             title="Packaging Costs" 
-            value="$235.00" 
+            value={`$${expenses.filter(e => e.category === 'Packaging').reduce((s, e) => s + e.amount, 0).toFixed(2)}`} 
             trend="Courier Bags & Boxes" 
             icon={<Box size={24} />} 
             variants={itemVariants} 
           />
           <StatCard 
             title="Branding & Marketing" 
-            value="$130.50" 
+            value={`$${expenses.filter(e => e.category === 'Branding').reduce((s, e) => s + e.amount, 0).toFixed(2)}`} 
             trend="Tags & Business Cards" 
             icon={<Tag size={24} />} 
             variants={itemVariants} 
@@ -177,18 +197,57 @@ export default function Expenses() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 mb-3 transition-colors">Category</label>
-                  <select 
-                    value={newCategory}
-                    onChange={(e) => setNewCategory(e.target.value)}
-                    className="w-full bg-[#FBF9F6] dark:bg-white/5 text-[#0F0E0D] dark:text-white px-5 py-4 rounded-2xl border border-transparent focus:border-[#0F0E0D]/30 dark:focus:border-white/30 outline-none text-sm font-bold appearance-none cursor-pointer transition-colors"
-                  >
-                    <option className="dark:bg-[#111111]">Packaging</option>
-                    <option className="dark:bg-[#111111]">Branding</option>
-                    <option className="dark:bg-[#111111]">Office Supplies</option>
-                    <option className="dark:bg-[#111111]">Logistics</option>
-                    <option className="dark:bg-[#111111]">Miscellaneous</option>
-                  </select>
+                  {/* Dynamic Category Header */}
+                  <div className="flex justify-between items-center mb-3">
+                    <label className="block text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 transition-colors">Category</label>
+                    {!showAddCategory && (
+                      <button 
+                        type="button" 
+                        onClick={() => setShowAddCategory(true)}
+                        className="text-[9px] font-bold uppercase tracking-widest text-[#0F0E0D] dark:text-white hover:opacity-70 transition-opacity"
+                      >
+                        + Add New
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Toggle between Select Dropdown and Custom Input */}
+                  {showAddCategory ? (
+                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex gap-2">
+                      <input 
+                        type="text" 
+                        value={customCategory}
+                        onChange={(e) => setCustomCategory(e.target.value)}
+                        placeholder="New Category" 
+                        autoFocus
+                        className="flex-1 bg-[#FBF9F6] dark:bg-white/5 px-4 py-4 rounded-2xl border border-[#0F0E0D] dark:border-white/30 outline-none transition-all text-sm font-bold text-[#0F0E0D] dark:text-white placeholder:text-[#0F0E0D]/30 dark:placeholder:text-white/30" 
+                      />
+                      <button 
+                        type="button"
+                        onClick={handleAddCustomCategory}
+                        className="px-4 bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D] rounded-2xl text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-opacity shadow-sm"
+                      >
+                        Add
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => setShowAddCategory(false)}
+                        className="px-3 bg-[#EBE6E0]/50 dark:bg-white/10 text-[#0F0E0D] dark:text-white rounded-2xl hover:bg-[#EBE6E0] dark:hover:bg-white/20 transition-colors"
+                      >
+                        <X size={16} strokeWidth={3} />
+                      </button>
+                    </motion.div>
+                  ) : (
+                    <select 
+                      value={newCategory}
+                      onChange={(e) => setNewCategory(e.target.value)}
+                      className="w-full bg-[#FBF9F6] dark:bg-white/5 text-[#0F0E0D] dark:text-white px-5 py-4 rounded-2xl border border-transparent focus:border-[#0F0E0D]/30 dark:focus:border-white/30 outline-none text-sm font-bold appearance-none cursor-pointer transition-colors"
+                    >
+                      {categories.map((cat, idx) => (
+                        <option key={idx} value={cat} className="dark:bg-[#111111]">{cat}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
 
                 <div>

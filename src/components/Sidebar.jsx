@@ -8,7 +8,8 @@ import {
   Settings,
   ShoppingCart,
   Plus,
-  Receipt
+  Receipt,
+  Layers
 } from 'lucide-react';
 
 export default function Sidebar({ activePage }) {
@@ -69,7 +70,16 @@ export default function Sidebar({ activePage }) {
           path="/expenses"
           active={activePage === 'Expenses'} 
         />
+
+        <NavItem 
+          icon={<Layers size={20} strokeWidth={2.5} />} 
+          label="Categories" 
+          path="/categories"
+          active={activePage === 'Categories'} 
+        />
       </nav>
+
+
 
    
       

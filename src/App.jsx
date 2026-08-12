@@ -14,6 +14,7 @@ import AddOrder from './pages/AddOrder';
 import Settings from './pages/Settings';
 import { ThemeProvider } from './context/ThemeContext';
 import Expenses from './pages/Expenses';
+import Categories from './pages/Categories';
 
 export default function App() {
   return (
@@ -33,6 +34,7 @@ export default function App() {
             <Route path="/orders" element={<OrdersList />} />
             <Route path="/add-order" element={<AddOrder />} />
             <Route path="/expenses" element={<Expenses />} />
+            <Route path="/categories" element={<Categories />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
           
