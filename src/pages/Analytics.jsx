@@ -53,7 +53,7 @@ export default function Analytics() {
           isPositive={true} 
           icon={<DollarSign size={24} />} 
           variants={itemVariants} 
-          isDark={true} // <-- Enables the inverted black design
+          isDark={true} 
         />
         <StatCard 
           title="Store Visitors" 
@@ -88,12 +88,14 @@ export default function Analytics() {
             <h2 className="text-2xl font-bold text-[#0F0E0D] dark:text-white tracking-tight transition-colors">Revenue vs. Orders</h2>
             <p className="text-sm text-[#0F0E0D]/50 dark:text-white/50 font-medium mt-1 transition-colors">Daily performance tracking</p>
           </div>
+          
+          {/* LEGEND - Fixed Contrast for Dark Mode */}
           <div className="flex gap-6 items-center">
             <div className="flex items-center gap-2 text-xs font-bold text-[#0F0E0D]/70 dark:text-white/70 uppercase tracking-widest transition-colors">
-              <div className="w-3 h-3 rounded-full bg-[#0F0E0D] dark:bg-white"></div> Revenue
+              <div className="w-3 h-3 rounded-full bg-[#0F0E0D] dark:bg-white/20"></div> Revenue
             </div>
             <div className="flex items-center gap-2 text-xs font-bold text-[#0F0E0D]/70 dark:text-white/70 uppercase tracking-widest transition-colors">
-              <div className="w-3 h-3 rounded-full bg-[#C4BEB6] dark:bg-white/40"></div> Orders
+              <div className="w-3 h-3 rounded-full bg-[#C4BEB6] dark:bg-white"></div> Orders
             </div>
           </div>
         </div>
@@ -109,11 +111,11 @@ export default function Analytics() {
             <span>0</span>
           </div>
 
-          {/* Abstract Bars */}
+          {/* Abstract Bars - Fixed Contrast for Dark Mode */}
           {[60, 45, 80, 50, 95, 70, 110, 85, 120, 60, 90, 75].map((h, i) => (
             <div key={i} className="flex flex-col items-center gap-2 w-full max-w-[40px] group-hover:scale-y-[1.02] transition-transform origin-bottom cursor-pointer relative">
-              <div className="w-full bg-[#0F0E0D] dark:bg-white rounded-t-lg transition-all duration-500 hover:opacity-80" style={{ height: `${h * 2}px` }}></div>
-              <div className="w-full bg-[#C4BEB6] dark:bg-white/30 rounded-t-lg absolute bottom-0 opacity-80 transition-all duration-500" style={{ height: `${(h * 2) * 0.6}px` }}></div>
+              <div className="w-full bg-[#0F0E0D] dark:bg-white/20 rounded-t-lg transition-all duration-500 hover:opacity-80" style={{ height: `${h * 2}px` }}></div>
+              <div className="w-full bg-[#C4BEB6] dark:bg-white rounded-t-lg absolute bottom-0 opacity-80 transition-all duration-500" style={{ height: `${(h * 2) * 0.6}px` }}></div>
             </div>
           ))}
         </div>
@@ -177,7 +179,6 @@ function StatCard({ title, value, trend, isPositive, icon, variants, isDark = fa
       variants={variants} 
       className={`${cardBg} ${borderColor} border p-7 rounded-[2rem] shadow-sm flex flex-col justify-between min-h-[190px] group hover:-translate-y-1 transition-all cursor-pointer relative overflow-hidden`}
     >
-      {/* Top Row: Icon and Badge */}
       <div className="flex justify-between items-start relative z-10 w-full">
         <div className={`${textColor} stroke-2 transition-colors`}>
           {icon}
@@ -187,13 +188,11 @@ function StatCard({ title, value, trend, isPositive, icon, variants, isDark = fa
         </div>
       </div>
       
-      {/* Bottom Row: Text content */}
       <div className="relative z-10 mt-6">
         <h3 className={`${titleColor} font-bold text-[10px] uppercase tracking-[0.15em] mb-1.5 transition-colors`}>{title}</h3>
         <p className={`${textColor} text-[2rem] font-extrabold tracking-tight leading-none transition-colors`}>{value}</p>
       </div>
       
-      {/* Decorative Wavy Lines */}
       <div className="absolute -right-4 -bottom-4 pointer-events-none z-0 transition-opacity">
         {isDark ? (
           <svg width="150" height="100" viewBox="0 0 150 100" fill="none" className="dark:hidden">

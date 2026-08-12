@@ -139,13 +139,13 @@ export default function Sales() {
                 ))}
               </div>
 
-              {/* SVG Line Chart */}
+              {/* SVG Line Chart (FIXED COLORS) */}
               <div className="absolute inset-0 ml-14 mb-8 mt-2">
                 <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 1000 300">
                   <defs>
-                    <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#0F0E0D" className="dark:stop-color-white" stopOpacity={0.2}/>
-                      <stop offset="95%" stopColor="#0F0E0D" className="dark:stop-color-white" stopOpacity={0}/>
+                    <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1" className="text-[#0F0E0D] dark:text-white transition-colors">
+                      <stop offset="5%" stopColor="currentColor" stopOpacity={0.2}/>
+                      <stop offset="95%" stopColor="currentColor" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   
@@ -158,8 +158,7 @@ export default function Sales() {
                   <path 
                     d="M 0,220 C 150,220 150,80 300,120 C 450,160 500,40 650,90 C 800,140 850,180 1000,100" 
                     fill="none" 
-                    stroke="#0F0E0D" 
-                    className="dark:stroke-white transition-colors"
+                    className="stroke-[#0F0E0D] dark:stroke-white transition-colors drop-shadow-lg"
                     strokeWidth="4" 
                     strokeLinecap="round" 
                   />
@@ -179,10 +178,8 @@ export default function Sales() {
                       cx={point.cx} 
                       cy={point.cy} 
                       r="6" 
-                      fill="white" 
-                      className="dark:fill-[#111111] stroke-[#0F0E0D] dark:stroke-white transition-colors" 
+                      className="fill-white dark:fill-[#111111] stroke-[#0F0E0D] dark:stroke-white transition-all duration-300 cursor-pointer hover:scale-125 origin-center" 
                       strokeWidth="3" 
-                      className="hover:r-8 transition-all cursor-pointer" 
                     />
                   ))}
                 </svg>
@@ -291,8 +288,8 @@ function StatCard({ title, value, trend, isPositive, icon, variants, isDark = fa
   const borderColor = isDark ? "border-transparent" : "border-[#EBE6E0] dark:border-white/10";
   
   // Custom pill colors
-  const pillBg = isPositive ? "bg-[#E6F4EA]" : "bg-[#FCE8E6]";
-  const pillText = isPositive ? "text-[#1E7E34]" : "text-[#C5221F]";
+  const pillBg = isPositive ? "bg-[#E6F4EA] dark:bg-green-100" : "bg-[#FCE8E6] dark:bg-red-100";
+  const pillText = isPositive ? "text-[#1E7E34] dark:text-green-700" : "text-[#C5221F] dark:text-red-700";
 
   return (
     <motion.div 
@@ -315,33 +312,19 @@ function StatCard({ title, value, trend, isPositive, icon, variants, isDark = fa
         <p className={`${textColor} text-[2rem] font-extrabold tracking-tight leading-none transition-colors`}>{value}</p>
       </div>
       
-      {/* Decorative Wavy Lines */}
+      {/* Decorative Wavy Lines (FIXED FOR DARK MODE) */}
       <div className="absolute -right-4 -bottom-4 pointer-events-none z-0">
-        {isDark ? (
-          <svg width="150" height="100" viewBox="0 0 150 100" fill="none" className="dark:hidden">
-            <path d="M0 80C35 80 60 40 90 55C115 67.5 130 65 150 50V100H0V80Z" fill="#1C1C1C"/>
-            <path d="M20 100C45 75 80 45 110 65C130 78.3333 145 75 150 65" stroke="#2A2A2A" strokeWidth="2.5" strokeLinecap="round"/>
-          </svg>
-        ) : null}
-        {isDark ? (
-          <svg width="150" height="100" viewBox="0 0 150 100" fill="none" className="hidden dark:block">
-            <path d="M0 80C35 80 60 40 90 55C115 67.5 130 65 150 50V100H0V80Z" fill="#D5CBB9"/>
-            <path d="M20 100C45 75 80 45 110 65C130 78.3333 145 75 150 65" stroke="#C4BEB6" strokeWidth="2.5" strokeLinecap="round"/>
-          </svg>
-        ) : null}
-
-        {!isDark ? (
-          <svg width="150" height="100" viewBox="0 0 150 100" fill="none" className="dark:hidden">
-            <path d="M0 80C35 80 60 40 90 55C115 67.5 130 65 150 50V100H0V80Z" fill="#FAFAFA"/>
-            <path d="M20 100C45 75 80 45 110 65C130 78.3333 145 75 150 65" stroke="#E5E5E5" strokeWidth="2.5" strokeLinecap="round"/>
-          </svg>
-        ) : null}
-        {!isDark ? (
-          <svg width="150" height="100" viewBox="0 0 150 100" fill="none" className="hidden dark:block">
-            <path d="M0 80C35 80 60 40 90 55C115 67.5 130 65 150 50V100H0V80Z" fill="#151515"/>
-            <path d="M20 100C45 75 80 45 110 65C130 78.3333 145 75 150 65" stroke="#1F1F1F" strokeWidth="2.5" strokeLinecap="round"/>
-          </svg>
-        ) : null}
+        <svg width="150" height="100" viewBox="0 0 150 100" fill="none">
+          <path 
+            d="M0 80C35 80 60 40 90 55C115 67.5 130 65 150 50V100H0V80Z" 
+            className={`transition-colors duration-300 ${isDark ? 'fill-[#1C1C1C] dark:fill-[#D5CBB9]' : 'fill-[#FAFAFA] dark:fill-[#151515]'}`}
+          />
+          <path 
+            d="M20 100C45 75 80 45 110 65C130 78.3333 145 75 150 65" 
+            className={`transition-colors duration-300 stroke-[2.5px] ${isDark ? 'stroke-[#2A2A2A] dark:stroke-[#C4BEB6]' : 'stroke-[#E5E5E5] dark:stroke-[#1F1F1F]'}`}
+            strokeLinecap="round"
+          />
+        </svg>
       </div>
     </motion.div>
   );
