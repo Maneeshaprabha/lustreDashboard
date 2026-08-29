@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Check, Plus, Upload, X, ArrowLeft, Loader2 } from 'lucide-react';
-import { productService } from '../services/productService'; // Make sure this points to your frontend service
+import { productService } from '../services/productService'; 
+import { categoryService } from '../services/categoryService'; // <-- ALUTHIN ADD KALA: Fetch categories
 
 // A refined default palette of colors you can assign to your products
 const defaultColorPalette = [
@@ -18,16 +19,36 @@ export default function AddProduct() {
   // --- API & Loading States ---
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  
+  // --- ALUTH: Category State ---
+  const [categories, setCategories] = useState([]);
 
   // --- Form Data State ---
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     price: '',
-    category: 'Jacket',
+    category: '', // Meka dan dynamic nisa hiswa thiyamu
     discount: '',
     discountType: 'None'
   });
+
+  // --- ALUTH: Load Live Categories on Mount ---
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const data = await categoryService.getAll();
+        setCategories(data);
+        // Default category ekata palaweni eka assign karanawa
+        if (data.length > 0) {
+          setFormData(prev => ({ ...prev, category: data[0].rawId }));
+        }
+      } catch (err) {
+        console.error("Failed to load categories", err);
+      }
+    };
+    loadCategories();
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -72,11 +93,10 @@ export default function AddProduct() {
   // Automatically calculate total stock by adding all size quantities together
   const totalStock = Object.values(sizeStock).reduce((sum, qty) => sum + qty, 0);
 
-  // --- Submit Handler (Matches your Backend perfectly!) ---
+  // --- Submit Handler ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Basic validation
     if (!formData.name || !formData.price) {
       setErrorMsg("Please fill in the product name and price.");
       return;
@@ -91,35 +111,32 @@ export default function AddProduct() {
     setErrorMsg('');
 
     try {
-      // 1. Clean up the price (remove '$' and convert to number)
+      // 1. Clean up the price
       const cleanPrice = parseFloat(formData.price.replace(/[^0-9.]/g, '')) || 0;
       
-      // 2. Map Category Name to a Dummy Category ID 
-      // (Issarahata category table eken real IDs fetch karama meka wenas karanna)
-      const categoryMap = { 'Jacket': 1, 'Outerwear': 2, 'Tops': 3, 'Bottoms': 4 };
-      const categoryId = categoryMap[formData.category] || 1;
+      // 2. Map Category Name (ALUTH: Dan eka kelinma ID ekak widiyata enawa)
+      const categoryId = formData.category;
 
-      // 3. Create Variants Array from sizes and selected colors
+      // 3. Create Variants Array
       const productVariants = [];
       Object.keys(sizeStock).forEach(size => {
         if (sizeStock[size] > 0) {
-          // Add a variant for each selected color for this size
           selectedColors.forEach(color => {
              productVariants.push({
                size: size,
-               stock: Math.floor(sizeStock[size] / selectedColors.length), // Divide stock among colors
+               stock: Math.floor(sizeStock[size] / selectedColors.length),
                color: color
              });
           });
         }
       });
 
-      // 4. Send exact payload your backend expects
+      // 4. Send exact payload
       await productService.create({
         name: formData.name,
         base_price: cleanPrice,
-        category_id: categoryId, 
-        variants: productVariants // This triggers the second insert in your backend!
+        category_id: categoryId, // Real Database Category ID goes here!
+        variants: productVariants 
       });
       
       navigate('/products');
@@ -382,6 +399,8 @@ export default function AddProduct() {
             <motion.div variants={itemVariants} className="bg-white dark:bg-[#111111] p-6 sm:p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-[#EBE6E0] dark:border-white/10 transition-colors">
               <h2 className="text-xl sm:text-2xl font-bold text-[#0F0E0D] dark:text-white tracking-tight mb-6 sm:mb-8 transition-colors">Category</h2>
               <div className="space-y-6">
+                
+                {/* --- ALUTH: Dynamic Category Dropdown --- */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 mb-3 transition-colors">Product Category</label>
                   <select 
@@ -390,19 +409,26 @@ export default function AddProduct() {
                     onChange={handleChange}
                     className="w-full bg-[#FBF9F6] dark:bg-white/5 text-[#0F0E0D] dark:text-white px-5 py-4 rounded-2xl border border-transparent focus:border-[#0F0E0D]/30 dark:focus:border-white/30 outline-none text-sm font-bold appearance-none cursor-pointer transition-colors"
                   >
-                    <option value="Jacket" className="dark:bg-[#111111]">Jacket</option>
-                    <option value="Outerwear" className="dark:bg-[#111111]">Outerwear</option>
-                    <option value="Tops" className="dark:bg-[#111111]">Tops</option>
-                    <option value="Bottoms" className="dark:bg-[#111111]">Bottoms</option>
+                    {categories.length === 0 ? (
+                      <option value="" disabled className="dark:bg-[#111111]">Loading categories...</option>
+                    ) : (
+                      categories.map(cat => (
+                        <option key={cat.rawId} value={cat.rawId} className="dark:bg-[#111111]">
+                          {cat.name}
+                        </option>
+                      ))
+                    )}
                   </select>
                 </div>
+                
                 <motion.button 
                   type="button"
+                  onClick={() => navigate('/categories')} // Quick link to category page
                   whileHover={{ scale: 1.02 }} 
                   whileTap={{ scale: 0.98 }} 
                   className="w-full py-4 bg-[#FBF9F6] dark:bg-white/5 border border-[#EBE6E0] dark:border-white/10 text-[#0F0E0D] dark:text-white font-extrabold uppercase tracking-widest text-[10px] rounded-2xl hover:bg-[#EBE6E0]/50 dark:hover:bg-white/10 transition-colors"
                 >
-                  Add Category
+                  Manage Categories
                 </motion.button>
               </div>
             </motion.div>
