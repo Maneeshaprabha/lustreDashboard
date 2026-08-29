@@ -74,7 +74,7 @@ export default function Categories() {
   const getStatusBadge = (status) => {
     switch(status) {
       case 'ACTIVE': return 'bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D]';
-      case 'Draft': return 'bg-[#FBF9F6] dark:bg-white/10 border border-[#EBE6E0] dark:border-white/20 text-[#0F0E0D] dark:text-white';
+      case 'DRAFT': return 'bg-[#FBF9F6] dark:bg-white/10 border border-[#EBE6E0] dark:border-white/20 text-[#0F0E0D] dark:text-white';
       default: return 'bg-[#EBE6E0]/50 dark:bg-white/5 text-[#0F0E0D] dark:text-white';
     }
   };
@@ -235,7 +235,7 @@ export default function Categories() {
                     className="w-full bg-[#FBF9F6] dark:bg-white/5 text-[#0F0E0D] dark:text-white px-5 py-4 rounded-2xl border border-transparent focus:border-[#0F0E0D]/30 dark:focus:border-white/30 outline-none text-sm font-bold appearance-none cursor-pointer transition-colors"
                   >
                     <option className="dark:bg-[#111111]" value="ACTIVE">ACTIVE (Visible)</option>
-                    <option className="dark:bg-[#111111]" value="Draft">Draft (Hidden)</option>
+                    <option className="dark:bg-[#111111]" value="DRAFT">DRAFT (Hidden)</option>
                   </select>
                 </div>
 
