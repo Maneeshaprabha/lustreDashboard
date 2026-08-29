@@ -15,6 +15,7 @@ import Contact from './pages/Contact';
 import OrdersList from './pages/OrdersList';
 import AddOrder from './pages/AddOrder';
 import Settings from './pages/Settings';
+import EditProduct from './pages/EditProduct';
 
 export default function App() {
   return (
@@ -33,6 +34,7 @@ export default function App() {
             <Route path="/products" element={<ProductsList />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/add-product" element={<AddProduct />} />
+            <Route path="/edit-product/:id" element={<EditProduct />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/sales" element={<Sales />} />
             <Route path="/expenses" element={<Expenses />} />

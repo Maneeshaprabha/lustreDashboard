@@ -15,6 +15,17 @@ export const productService = {
     const response = await api.delete(`/products/${id}`);
     return response.data;
   },
+  // Get a single product
+  getById: async (id) => {
+    const response = await api.get(`/products/${id}`);
+    return response.data.data;
+  },
+
+  // Update a product
+  update: async (id, productData) => {
+    const response = await api.put(`/products/${id}`, productData);
+    return response.data;
+  },
 
   // --- WENAS KALA: Image eka backend ekata yawanawa ---
   uploadImage: async (file) => {

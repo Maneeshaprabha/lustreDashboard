@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { 
   Plus, Search, Filter, MoreHorizontal, 
-  Pencil, Trash2, ArrowUpDown, Loader2, AlertTriangle // <-- ALUTHIN AlertTriangle add kala
+  Pencil, Trash2, ArrowUpDown, Loader2, AlertTriangle
 } from 'lucide-react';
 import { productService } from '../services/productService'; 
 
@@ -12,9 +12,13 @@ export default function ProductsList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // --- ALUTH: Delete Modal State ---
+  // --- Delete Modal State ---
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, productId: null, productName: '' });
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // --- Pagination State ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchProducts();
@@ -33,12 +37,10 @@ export default function ProductsList() {
     }
   };
 
-  // --- ALUTH: Trash Icon eka click kalama Modal eka open karanawa ---
   const handleDeleteClick = (id, name) => {
     setDeleteModal({ isOpen: true, productId: id, productName: name });
   };
 
-  // --- ALUTH: Modal eke "Yes, Delete" eka click kalama database eken ain karanawa ---
   const confirmDelete = async () => {
     if (!deleteModal.productId) return;
     
@@ -46,16 +48,40 @@ export default function ProductsList() {
       setIsDeleting(true);
       await productService.delete(deleteModal.productId);
       
-      // UI eken ain karanawa
-      setProducts(products.filter(product => product.id !== deleteModal.productId));
+      // UI එකෙන් අයින් කරනවා
+      const updatedProducts = products.filter(product => product.id !== deleteModal.productId);
+      setProducts(updatedProducts);
       
-      // Modal eka close karanawa
+      // Delete කරාට පස්සේ page එකේ මුකුත් නැත්නම් කලින් page එකට යන්න
+      const totalPagesAfterDelete = Math.ceil(updatedProducts.length / itemsPerPage);
+      if (currentPage > totalPagesAfterDelete && totalPagesAfterDelete > 0) {
+        setCurrentPage(totalPagesAfterDelete);
+      }
+      
       setDeleteModal({ isOpen: false, productId: null, productName: '' });
     } catch (err) {
       console.error('Failed to delete product', err);
       alert('Could not delete the product.');
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  // --- Pagination Logic ---
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentProducts = products.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(products.length / itemsPerPage);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
     }
   };
 
@@ -144,19 +170,20 @@ export default function ProductsList() {
                   </tr>
                 </thead>
                 <tbody className="text-sm">
-                  <AnimatePresence>
-                    {products.map((product) => {
+                  {/* ALUTH: mode="wait" එක දැම්මා page මාරු වෙද්දි ලස්සනට පරණ ටික අයින් වෙලා අලුත් ටික එන්න */}
+                  <AnimatePresence mode="wait">
+                    {currentProducts.map((product) => {
                       const totalStock = product.variants?.reduce((sum, variant) => sum + (variant.stock || 0), 0) || 0;
 
                       return (
                         <motion.tr 
                           key={product.id} 
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, x: -20 }}
+                          transition={{ duration: 0.2 }}
                           className="border-b border-[#EBE6E0]/60 dark:border-white/5 hover:bg-[#FBF9F6]/50 dark:hover:bg-white/5 transition-colors group"
                         >
-                          {/* Product Info */}
                           <td className="px-4 sm:px-6 py-4 sm:py-5">
                             <div className="flex items-center gap-3 sm:gap-4">
                               <div className="w-12 h-12 rounded-2xl overflow-hidden bg-[#FBF9F6] dark:bg-white/5 border border-[#EBE6E0] dark:border-white/10 shrink-0">
@@ -199,12 +226,16 @@ export default function ProductsList() {
                           
                           <td className="px-4 sm:px-6 py-4 sm:py-5">
                             <div className="flex items-center justify-end gap-1 sm:gap-2 opacity-100 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
-                              <button className="p-2 text-[#0F0E0D]/50 dark:text-white/50 hover:text-[#0F0E0D] dark:hover:text-white hover:bg-[#EBE6E0] dark:hover:bg-white/10 rounded-xl transition-colors" title="Edit Product">
+                              <Link 
+                                to={`/edit-product/${product.id}`} 
+                                className="p-2 text-[#0F0E0D]/50 dark:text-white/50 hover:text-[#0F0E0D] dark:hover:text-white hover:bg-[#EBE6E0] dark:hover:bg-white/10 rounded-xl transition-colors inline-block" 
+                                title="Edit Product"
+                              >
                                 <Pencil size={16} strokeWidth={2.5} />
-                              </button>
+                              </Link>
                               
                               <button 
-                                onClick={() => handleDeleteClick(product.id, product.name)} // <-- ALUTH: Call new modal function
+                                onClick={() => handleDeleteClick(product.id, product.name)}
                                 className="p-2 text-[#0F0E0D]/50 dark:text-white/50 hover:text-[#6A3131] dark:hover:text-red-400 hover:bg-[#FFF4F4] dark:hover:bg-red-500/20 rounded-xl transition-colors" 
                                 title="Delete Product"
                               >
@@ -228,21 +259,36 @@ export default function ProductsList() {
           {/* Pagination Footer */}
           {!loading && !error && products.length > 0 && (
             <div className="px-6 sm:px-8 py-5 border-t border-[#EBE6E0] dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/50 dark:text-white/50 transition-colors">
-              <p className="text-center sm:text-left">Showing 1 to {products.length} of {products.length} results</p>
+              <p className="text-center sm:text-left">
+                Showing {products.length === 0 ? 0 : indexOfFirstItem + 1} to {Math.min(indexOfLastItem, products.length)} of {products.length} results
+              </p>
               <div className="flex gap-2 w-full sm:w-auto">
-                <button className="flex-1 sm:flex-none px-5 py-2.5 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-[1.2rem] hover:bg-[#FBF9F6] dark:hover:bg-white/5 transition-colors text-[#0F0E0D] dark:text-white text-center">Previous</button>
-                <button className="flex-1 sm:flex-none px-5 py-2.5 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-[1.2rem] hover:bg-[#FBF9F6] dark:hover:bg-white/5 transition-colors text-[#0F0E0D] dark:text-white text-center">Next</button>
+                <button 
+                  type="button"
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                  className="flex-1 sm:flex-none px-5 py-2.5 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-[1.2rem] hover:bg-[#FBF9F6] dark:hover:bg-white/5 transition-colors text-[#0F0E0D] dark:text-white text-center disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <button 
+                  type="button"
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className="flex-1 sm:flex-none px-5 py-2.5 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-[1.2rem] hover:bg-[#FBF9F6] dark:hover:bg-white/5 transition-colors text-[#0F0E0D] dark:text-white text-center disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
               </div>
             </div>
           )}
         </motion.div>
       </motion.div>
 
-      {/* --- ALUTH: DELETE CONFIRMATION MODAL UI --- */}
+      {/* DELETE CONFIRMATION MODAL UI */}
       <AnimatePresence>
         {deleteModal.isOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Modal Backdrop / Overlay */}
             <motion.div 
               initial={{ opacity: 0 }} 
               animate={{ opacity: 1 }} 
@@ -251,7 +297,6 @@ export default function ProductsList() {
               onClick={() => !isDeleting && setDeleteModal({ isOpen: false, productId: null, productName: '' })}
             />
             
-            {/* Modal Box */}
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 20 }} 
               animate={{ opacity: 1, scale: 1, y: 0 }} 
@@ -271,6 +316,7 @@ export default function ProductsList() {
                 
                 <div className="flex w-full gap-3">
                   <button 
+                    type="button"
                     onClick={() => setDeleteModal({ isOpen: false, productId: null, productName: '' })}
                     disabled={isDeleting}
                     className="flex-1 px-6 py-4 bg-[#FBF9F6] dark:bg-white/5 border border-[#EBE6E0] dark:border-white/10 rounded-[1.5rem] text-[10px] uppercase tracking-widest font-bold text-[#0F0E0D] dark:text-white hover:bg-[#EBE6E0] dark:hover:bg-white/10 transition-colors disabled:opacity-50"
@@ -278,6 +324,7 @@ export default function ProductsList() {
                     Cancel
                   </button>
                   <button 
+                    type="button"
                     onClick={confirmDelete}
                     disabled={isDeleting}
                     className="flex-1 flex items-center justify-center px-6 py-4 bg-red-500 text-white rounded-[1.5rem] text-[10px] uppercase tracking-widest font-bold hover:bg-red-600 transition-colors shadow-[0_10px_20px_-10px_rgba(239,68,68,0.4)] disabled:opacity-70"

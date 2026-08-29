@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Check, Plus, Upload, X, ArrowLeft, Loader2, ImageIcon } from 'lucide-react';
 import { productService } from '../services/productService'; 
 import { categoryService } from '../services/categoryService';
@@ -10,16 +10,19 @@ const defaultColorPalette = [
 ];
 const availableSizes = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
 
-export default function AddProduct() {
+export default function EditProduct() {
   const navigate = useNavigate();
+  const { id } = useParams(); // URL eken ID eka gannawa
   
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true); // Initial load eka check karanna
   const [errorMsg, setErrorMsg] = useState('');
   const [categories, setCategories] = useState([]);
 
-  // --- ALUTH: Multiple Images Handling States ---
-  const [imageFiles, setImageFiles] = useState([]); // Array of actual files to upload
-  const [imagePreviews, setImagePreviews] = useState([]); // Array of local preview URLs
+  // --- IMAGES HANDLING STATES ---
+  const [existingImages, setExistingImages] = useState([]); // Parana DB eke thiyena images
+  const [imageFiles, setImageFiles] = useState([]); // Aluthin upload karana files
+  const [imagePreviews, setImagePreviews] = useState([]); // Aluth ewage previews
 
   const [formData, setFormData] = useState({
     name: '',
@@ -30,49 +33,90 @@ export default function AddProduct() {
     discountType: 'None'
   });
 
+  const [activeGender, setActiveGender] = useState('Woman');
+  const [availableColors, setAvailableColors] = useState(defaultColorPalette);
+  const [selectedColors, setSelectedColors] = useState([]);
+  const [sizeStock, setSizeStock] = useState({
+    XS: 0, S: 0, M: 0, L: 0, XL: 0, '2XL': 0, '3XL': 0
+  });
+
+  // --- FETCH EXISTING DATA ---
   useEffect(() => {
-    const loadCategories = async () => {
+    const loadData = async () => {
       try {
-        const data = await categoryService.getAll();
-        setCategories(data);
-        if (data.length > 0) {
-          setFormData(prev => ({ ...prev, category: data[0].rawId }));
+        setFetching(true);
+        const cats = await categoryService.getAll();
+        setCategories(cats);
+
+        const product = await productService.getById(id);
+        
+        setFormData({
+          name: product.name || '',
+          description: product.description || '',
+          price: product.base_price ? product.base_price.toString() : '',
+          category: product.category_id || (cats.length > 0 ? cats[0].rawId : ''),
+          discount: product.discount || '',
+          discountType: product.discount_type || 'None'
+        });
+
+        // Load Multiple Images
+        if (product.images && product.images.length > 0) {
+          setExistingImages(product.images);
+        } else if (product.img_url) {
+          setExistingImages([product.img_url]);
+        }
+
+        // Load Variants (Sizes and Colors)
+        if (product.variants && product.variants.length > 0) {
+          const loadedSizeStock = { XS: 0, S: 0, M: 0, L: 0, XL: 0, '2XL': 0, '3XL': 0 };
+          const loadedColors = new Set();
+          
+          product.variants.forEach(v => {
+            if (loadedSizeStock[v.size] !== undefined) loadedSizeStock[v.size] += (v.stock || 0);
+            if (v.color) loadedColors.add(v.color);
+          });
+
+          setSizeStock(loadedSizeStock);
+          setSelectedColors(Array.from(loadedColors));
+
+          Array.from(loadedColors).forEach(color => {
+            if (!availableColors.includes(color)) setAvailableColors(prev => [...prev, color]);
+          });
         }
       } catch (err) {
-        console.error("Failed to load categories", err);
+        setErrorMsg("Failed to load product details.");
+        console.error(err);
+      } finally {
+        setFetching(false);
       }
     };
-    loadCategories();
-  }, []);
+    if (id) loadData();
+  }, [id]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // --- ALUTH: Select Multiple Images ---
+  // --- MULTIPLE IMAGES SELECTION ---
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     if (files.length > 0) {
       setImageFiles(prev => [...prev, ...files]);
-      
       const newPreviews = files.map(file => URL.createObjectURL(file));
       setImagePreviews(prev => [...prev, ...newPreviews]);
     }
   };
 
-  // --- ALUTH: Remove an Image ---
-  const removeImage = (indexToRemove) => {
+  // --- REMOVE EXISTING IMAGE (DB) ---
+  const removeExistingImage = (indexToRemove) => {
+    setExistingImages(prev => prev.filter((_, i) => i !== indexToRemove));
+  };
+
+  // --- REMOVE NEW IMAGE (LOCAL) ---
+  const removeNewImage = (indexToRemove) => {
     setImageFiles(prev => prev.filter((_, index) => index !== indexToRemove));
     setImagePreviews(prev => prev.filter((_, index) => index !== indexToRemove));
   };
-
-  const [activeGender, setActiveGender] = useState('Woman');
-  const [availableColors, setAvailableColors] = useState(defaultColorPalette);
-  const [selectedColors, setSelectedColors] = useState([defaultColorPalette[0]]);
-
-  const [sizeStock, setSizeStock] = useState({
-    XS: 0, S: 0, M: 0, L: 0, XL: 0, '2XL': 0, '3XL': 0
-  });
 
   const toggleColor = (color) => {
     if (selectedColors.includes(color)) {
@@ -99,16 +143,15 @@ export default function AddProduct() {
 
   const totalStock = Object.values(sizeStock).reduce((sum, qty) => sum + qty, 0);
 
+  // --- SUBMIT UPDATE ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!formData.name || !formData.price) {
-      setErrorMsg("Please fill in the product name and price.");
-      return;
+      setErrorMsg("Please fill in the product name and price."); return;
     }
     if (totalStock === 0) {
-      setErrorMsg("Please add stock to at least one size.");
-      return;
+      setErrorMsg("Please add stock to at least one size."); return;
     }
 
     setLoading(true);
@@ -121,45 +164,46 @@ export default function AddProduct() {
       const productVariants = [];
       Object.keys(sizeStock).forEach(size => {
         if (sizeStock[size] > 0) {
-          selectedColors.forEach(color => {
+          const colorsToUse = selectedColors.length > 0 ? selectedColors : [defaultColorPalette[0]];
+          colorsToUse.forEach(color => {
              productVariants.push({
                size: size,
-               stock: Math.floor(sizeStock[size] / selectedColors.length),
+               stock: Math.floor(sizeStock[size] / colorsToUse.length),
                color: color
              });
           });
         }
       });
 
-      // --- ALUTH: Upload ALL Images using Promise.all ---
-      let uploadedImageUrls = [];
+      // Upload ALL Newly added Images using Promise.all
+      let newUploadedUrls = [];
       if (imageFiles.length > 0) {
-        uploadedImageUrls = await Promise.all(
+        newUploadedUrls = await Promise.all(
           imageFiles.map(async (file) => {
             return await productService.uploadImage(file);
           })
         );
       }
 
-      await productService.create({
+      // Combine existing images (not deleted) + new uploaded images
+      const finalImagesArray = [...existingImages, ...newUploadedUrls];
+      const mainImageUrl = finalImagesArray.length > 0 ? finalImagesArray[0] : null;
+
+      await productService.update(id, {
         name: formData.name,
         base_price: cleanPrice,
         category_id: categoryId,
         description: formData.description,
         discount: formData.discount,
         discount_type: formData.discountType,
-        
-        // Palaweni image eka main image (img_url) eka widiyata yawanawa.
-        // Array ekak widiyata gallery eka danna oni nam `images: uploadedImageUrls` wage yawanna puluwan.
-        img_url: uploadedImageUrls[0] || null, 
-        images: uploadedImageUrls, // Oyaage backend ekata ewanawanm meka use karanna puluwan
-        
+        img_url: mainImageUrl, 
+        images: finalImagesArray, 
         variants: productVariants 
       });
       
       navigate('/products');
     } catch (error) {
-      setErrorMsg(error.message || 'Failed to add product. Please try again.');
+      setErrorMsg(error.message || 'Failed to update product. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -167,6 +211,18 @@ export default function AddProduct() {
 
   const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
   const itemVariants = { hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } } };
+
+  if (fetching) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#FBF9F6] dark:bg-[#0A0A0A] text-[#0F0E0D]/40 dark:text-white/40">
+        <Loader2 className="animate-spin mb-4" size={32} />
+        <p className="text-xs font-bold uppercase tracking-widest">Loading Product Details...</p>
+      </div>
+    );
+  }
+
+  // To display the main preview (First image from DB or new upload)
+  const mainPreviewImage = existingImages.length > 0 ? existingImages[0] : (imagePreviews.length > 0 ? imagePreviews[0] : null);
 
   return (
     <form onSubmit={handleSubmit}>
@@ -179,8 +235,8 @@ export default function AddProduct() {
               <ArrowLeft size={20} strokeWidth={2.5} />
             </button>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F0E0D] dark:text-white tracking-tight flex items-center gap-2 transition-colors">Add New Product</h1>
-              <p className="text-[10px] text-[#0F0E0D]/50 dark:text-white/50 font-bold uppercase tracking-[0.3em] mt-1 sm:mt-2 transition-colors">Expand your inventory</p>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F0E0D] dark:text-white tracking-tight flex items-center gap-2 transition-colors">Edit Product</h1>
+              <p className="text-[10px] text-[#0F0E0D]/50 dark:text-white/50 font-bold uppercase tracking-[0.3em] mt-1 sm:mt-2 transition-colors">Update inventory details</p>
             </div>
           </div>
           
@@ -189,7 +245,7 @@ export default function AddProduct() {
               Cancel
             </motion.button>
             <motion.button type="submit" disabled={loading} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1 md:flex-none justify-center px-6 py-3.5 sm:py-3 bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D] rounded-[1.5rem] text-[10px] uppercase tracking-widest font-bold flex items-center gap-2 shadow-[0_10px_20px_-10px_rgba(15,14,13,0.4)] dark:shadow-[0_10px_20px_-10px_rgba(255,255,255,0.4)] hover:bg-[#0F0E0D]/90 dark:hover:bg-white/90 transition-colors disabled:opacity-70">
-              {loading ? <Loader2 size={16} className="animate-spin" /> : <><Check size={16} strokeWidth={3} /> Save</>}
+              {loading ? <Loader2 size={16} className="animate-spin" /> : <><Check size={16} strokeWidth={3} /> Save Changes</>}
             </motion.button>
           </div>
         </motion.div>
@@ -310,15 +366,15 @@ export default function AddProduct() {
                   className="hidden" 
                 />
                 
-                <div className={`absolute inset-0 bg-[#0F0E0D]/10 dark:bg-white/10 flex flex-col items-center justify-center transition-opacity z-10 ${imagePreviews.length > 0 ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
+                <div className={`absolute inset-0 bg-[#0F0E0D]/10 dark:bg-white/10 flex flex-col items-center justify-center transition-opacity z-10 ${(existingImages.length > 0 || imagePreviews.length > 0) ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
                   <Upload className="text-[#0F0E0D] dark:text-white w-8 h-8 mb-2" />
                   <span className="text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/70 dark:text-white/70">
-                    {imagePreviews.length > 0 ? 'Add More Images' : 'Select Images'}
+                    {(existingImages.length > 0 || imagePreviews.length > 0) ? 'Add More Images' : 'Select Images'}
                   </span>
                 </div>
 
-                {imagePreviews.length > 0 ? (
-                  <img src={imagePreviews[0]} alt="Main Preview" className="absolute inset-0 w-full h-full object-cover rounded-[1.7rem] group-hover:blur-sm transition-all duration-300" />
+                {mainPreviewImage ? (
+                  <img src={mainPreviewImage} alt="Main Preview" className="absolute inset-0 w-full h-full object-cover rounded-[1.7rem] group-hover:blur-sm transition-all duration-300" />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <ImageIcon className="w-16 h-16 text-[#0F0E0D]/10 dark:text-white/10" />
@@ -327,18 +383,35 @@ export default function AddProduct() {
               </label>
               
               {/* --- MULTIPLE THUMBNAILS GRID --- */}
-              {imagePreviews.length > 0 && (
+              {(existingImages.length > 0 || imagePreviews.length > 0) && (
                 <div className="flex flex-wrap gap-3">
-                  {imagePreviews.map((src, index) => (
-                    <div key={index} className="relative w-16 h-16 rounded-2xl border-2 border-[#0F0E0D] dark:border-white overflow-hidden p-0.5 group">
-                      <img src={src} className="w-full h-full object-cover rounded-xl" alt={`thumbnail-${index}`} />
+                  
+                  {/* 1. Existing Images from Database */}
+                  {existingImages.map((src, index) => (
+                    <div key={`db-${index}`} className="relative w-16 h-16 rounded-2xl border-2 border-[#0F0E0D] dark:border-white overflow-hidden p-0.5 group">
+                      <img src={src} className="w-full h-full object-cover rounded-xl" alt={`existing-thumbnail-${index}`} />
                       
-                      {/* Delete Overlay */}
                       <button 
                         type="button" 
-                        onClick={() => removeImage(index)}
+                        onClick={() => removeExistingImage(index)}
                         className="absolute inset-0.5 bg-black/60 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Remove Image"
+                        title="Remove Saved Image"
+                      >
+                        <X className="text-white w-6 h-6" />
+                      </button>
+                    </div>
+                  ))}
+
+                  {/* 2. New Images (Local Previews) */}
+                  {imagePreviews.map((src, index) => (
+                    <div key={`new-${index}`} className="relative w-16 h-16 rounded-2xl border-2 border-blue-500 overflow-hidden p-0.5 group">
+                      <img src={src} className="w-full h-full object-cover rounded-xl" alt={`new-thumbnail-${index}`} />
+                      
+                      <button 
+                        type="button" 
+                        onClick={() => removeNewImage(index)}
+                        className="absolute inset-0.5 bg-black/60 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Remove New Image"
                       >
                         <X className="text-white w-6 h-6" />
                       </button>
@@ -383,7 +456,7 @@ export default function AddProduct() {
             <X size={16} strokeWidth={2.5} /> Cancel
           </motion.button>
           <motion.button type="submit" disabled={loading} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto justify-center px-10 py-4 bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D] rounded-[1.5rem] text-[10px] uppercase tracking-widest font-bold flex items-center gap-3 shadow-[0_10px_20px_-10px_rgba(15,14,13,0.4)] dark:shadow-[0_10px_20px_-10px_rgba(255,255,255,0.4)] hover:bg-[#0F0E0D]/90 dark:hover:bg-white/90 transition-colors disabled:opacity-70">
-            {loading ? <Loader2 size={18} className="animate-spin" /> : <><Check size={18} strokeWidth={3} /> Save Product</>}
+            {loading ? <Loader2 size={18} className="animate-spin" /> : <><Check size={18} strokeWidth={3} /> Save Changes</>}
           </motion.button>
         </motion.div>
 
