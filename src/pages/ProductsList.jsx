@@ -5,14 +5,13 @@ import {
   Plus, Search, Filter, MoreHorizontal, 
   Pencil, Trash2, ArrowUpDown, Loader2 
 } from 'lucide-react';
-import { productService } from '../services/productService'; // <-- NEW API IMPORT
+import { productService } from '../services/productService'; 
 
 export default function ProductsList() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // --- NEW: Fetch Real Data on Load ---
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -30,13 +29,11 @@ export default function ProductsList() {
     }
   };
 
-  // --- NEW: Real Database Deletion ---
   const handleDelete = async (idToRemove) => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
     
     try {
       await productService.delete(idToRemove);
-      // Remove it from the UI without reloading the page
       setProducts(products.filter(product => product.id !== idToRemove));
     } catch (err) {
       console.error('Failed to delete product', err);
@@ -55,7 +52,9 @@ export default function ProductsList() {
   };
 
   const getStatusBadge = (status) => {
-    switch(status) {
+    // Database eken ena status eka null nam hari, wena ekak nam hari default active karanawa
+    const currentStatus = status || 'Active'; 
+    switch(currentStatus) {
       case 'Active': return 'bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D]';
       case 'Low Stock': return 'bg-[#FFF9F4] dark:bg-orange-500/20 text-[#6A4A2E] dark:text-orange-400 border border-[#F2EAE2] dark:border-orange-500/30';
       case 'Draft': return 'bg-[#FBF9F6] dark:bg-white/10 text-[#0F0E0D] dark:text-white border border-[#EBE6E0] dark:border-white/20';
@@ -128,71 +127,87 @@ export default function ProductsList() {
               </thead>
               <tbody className="text-sm">
                 <AnimatePresence>
-                  {products.map((product) => (
-                    <motion.tr 
-                      key={product.id} 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      className="border-b border-[#EBE6E0]/60 dark:border-white/5 hover:bg-[#FBF9F6]/50 dark:hover:bg-white/5 transition-colors group"
-                    >
-                      {/* Product Info */}
-                      <td className="px-4 sm:px-6 py-4 sm:py-5">
-                        <div className="flex items-center gap-3 sm:gap-4">
-                          <div className="w-12 h-12 rounded-2xl overflow-hidden bg-[#FBF9F6] dark:bg-white/5 border border-[#EBE6E0] dark:border-white/10 shrink-0">
-                            <img src={product.img_url} alt={product.name} className="w-full h-full object-cover" />
+                  {products.map((product) => {
+                    // Variants (sizes/colors) array eken total stock eka calculate karagannawa
+                    const totalStock = product.variants?.reduce((sum, variant) => sum + (variant.stock || 0), 0) || 0;
+
+                    return (
+                      <motion.tr 
+                        key={product.id} 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        className="border-b border-[#EBE6E0]/60 dark:border-white/5 hover:bg-[#FBF9F6]/50 dark:hover:bg-white/5 transition-colors group"
+                      >
+                        {/* Product Info */}
+                        <td className="px-4 sm:px-6 py-4 sm:py-5">
+                          <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="w-12 h-12 rounded-2xl overflow-hidden bg-[#FBF9F6] dark:bg-white/5 border border-[#EBE6E0] dark:border-white/10 shrink-0">
+                              {product.img_url ? (
+                                <img src={product.img_url} alt={product.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full bg-[#EBE6E0] dark:bg-white/10"></div>
+                              )}
+                            </div>
+                            <div>
+                              <h4 className="font-extrabold text-[#0F0E0D] dark:text-white text-sm tracking-tight transition-colors">{product.name}</h4>
+                              <p className="text-[10px] text-[#0F0E0D]/40 dark:text-white/40 font-bold uppercase tracking-widest mt-1 transition-colors">
+                                {/* Category eke ID eka wenuwata name eka pennanna thama api hadala nathi nisa, ID eka pennanawa */}
+                                Category #{product.category_id || 'N/A'}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h4 className="font-extrabold text-[#0F0E0D] dark:text-white text-sm tracking-tight transition-colors">{product.name}</h4>
-                            <p className="text-[10px] text-[#0F0E0D]/40 dark:text-white/40 font-bold uppercase tracking-widest mt-1 transition-colors">{product.category}</p>
+                        </td>
+                        
+                        {/* SKU - FIX: custom_id eka use karanawa */}
+                        <td className="px-4 sm:px-6 py-4 sm:py-5 font-mono font-bold text-[#0F0E0D]/60 dark:text-white/60 text-xs tracking-wider transition-colors">
+                          {product.custom_id || 'N/A'}
+                        </td>
+                        
+                        {/* Price - FIX: base_price eka use karanawa */}
+                        <td className="px-4 sm:px-6 py-4 sm:py-5 font-extrabold text-[#0F0E0D] dark:text-white text-base tracking-tight transition-colors">
+                          ${Number(product.base_price || 0).toFixed(2)}
+                        </td>
+                        
+                        {/* Stock - FIX: Calculate karapu total stock eka pennanawa */}
+                        <td className="px-4 sm:px-6 py-4 sm:py-5 font-medium text-[#0F0E0D]/70 dark:text-white/70 text-xs transition-colors">
+                          {totalStock > 0 ? (
+                            <span className={totalStock < 10 ? 'text-orange-500' : ''}>{totalStock} in stock</span>
+                          ) : (
+                            <span className="text-red-500 font-bold">Out of stock</span>
+                          )}
+                        </td>
+                        
+                        {/* Status Badge */}
+                        <td className="px-4 sm:px-6 py-4 sm:py-5">
+                          <span className={`px-4 py-2 text-[9px] uppercase tracking-[0.2em] font-bold rounded-full inline-flex items-center ${getStatusBadge(product.status)} transition-colors`}>
+                            {product.status || 'Active'}
+                          </span>
+                        </td>
+                        
+                        {/* Actions */}
+                        <td className="px-4 sm:px-6 py-4 sm:py-5">
+                          <div className="flex items-center justify-end gap-1 sm:gap-2 opacity-100 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
+                            <button className="p-2 text-[#0F0E0D]/50 dark:text-white/50 hover:text-[#0F0E0D] dark:hover:text-white hover:bg-[#EBE6E0] dark:hover:bg-white/10 rounded-xl transition-colors" title="Edit Product">
+                              <Pencil size={16} strokeWidth={2.5} />
+                            </button>
+                            
+                            <button 
+                              onClick={() => handleDelete(product.id)}
+                              className="p-2 text-[#0F0E0D]/50 dark:text-white/50 hover:text-[#6A3131] dark:hover:text-red-400 hover:bg-[#FFF4F4] dark:hover:bg-red-500/20 rounded-xl transition-colors" 
+                              title="Delete Product"
+                            >
+                              <Trash2 size={16} strokeWidth={2.5} />
+                            </button>
+                            
+                            <button className="p-2 text-[#0F0E0D]/50 dark:text-white/50 hover:text-[#0F0E0D] dark:hover:text-white hover:bg-[#EBE6E0] dark:hover:bg-white/10 rounded-xl transition-colors">
+                              <MoreHorizontal size={16} strokeWidth={2.5} />
+                            </button>
                           </div>
-                        </div>
-                      </td>
-                      
-                      {/* SKU */}
-                      <td className="px-4 sm:px-6 py-4 sm:py-5 font-mono font-bold text-[#0F0E0D]/60 dark:text-white/60 text-xs tracking-wider transition-colors">
-                        #{product.sku}
-                      </td>
-                      
-                      {/* Price */}
-                      <td className="px-4 sm:px-6 py-4 sm:py-5 font-extrabold text-[#0F0E0D] dark:text-white text-base tracking-tight transition-colors">
-                        ${Number(product.price).toFixed(2)}
-                      </td>
-                      
-                      {/* Stock */}
-                      <td className="px-4 sm:px-6 py-4 sm:py-5 font-medium text-[#0F0E0D]/70 dark:text-white/70 text-xs transition-colors">
-                        {product.stock} in stock
-                      </td>
-                      
-                      {/* Status Badge */}
-                      <td className="px-4 sm:px-6 py-4 sm:py-5">
-                        <span className={`px-4 py-2 text-[9px] uppercase tracking-[0.2em] font-bold rounded-full inline-flex items-center ${getStatusBadge(product.status)} transition-colors`}>
-                          {product.status}
-                        </span>
-                      </td>
-                      
-                      {/* Actions */}
-                      <td className="px-4 sm:px-6 py-4 sm:py-5">
-                        <div className="flex items-center justify-end gap-1 sm:gap-2 opacity-100 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
-                          <button className="p-2 text-[#0F0E0D]/50 dark:text-white/50 hover:text-[#0F0E0D] dark:hover:text-white hover:bg-[#EBE6E0] dark:hover:bg-white/10 rounded-xl transition-colors" title="Edit Product">
-                            <Pencil size={16} strokeWidth={2.5} />
-                          </button>
-                          
-                          <button 
-                            onClick={() => handleDelete(product.id)}
-                            className="p-2 text-[#0F0E0D]/50 dark:text-white/50 hover:text-[#6A3131] dark:hover:text-red-400 hover:bg-[#FFF4F4] dark:hover:bg-red-500/20 rounded-xl transition-colors" 
-                            title="Delete Product"
-                          >
-                            <Trash2 size={16} strokeWidth={2.5} />
-                          </button>
-                          
-                          <button className="p-2 text-[#0F0E0D]/50 dark:text-white/50 hover:text-[#0F0E0D] dark:hover:text-white hover:bg-[#EBE6E0] dark:hover:bg-white/10 rounded-xl transition-colors">
-                            <MoreHorizontal size={16} strokeWidth={2.5} />
-                          </button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
+                        </td>
+                      </motion.tr>
+                    );
+                  })}
                 </AnimatePresence>
               </tbody>
             </table>
