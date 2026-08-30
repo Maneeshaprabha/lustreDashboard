@@ -103,11 +103,8 @@ const handleSaveOrder = async () => {
       await orderService.update(id, updatedPayload);
       showNotification("Order updated successfully!", "success");
       
-      // FIX EKA: Meka change karanna!
-      // 'navigate' kiyanawata wada window location eka refresh karala yawamu. 
-      // Ehema naththam navigate eka refresh data aran pennanna OrdersList page eke useEffect ekata yanna oni.
       setTimeout(() => {
-        window.location.href = '/orders'; // Force a full page reload when navigating back
+        window.location.href = '/orders'; 
       }, 1200);
 
     } catch (error) {
@@ -244,8 +241,8 @@ const handleSaveOrder = async () => {
                 <div>
                   <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 mb-3"><DollarSign size={16} /> Delivery Fee</label>
                   <div className="relative">
-                    <span className="absolute left-5 top-1/2 -translate-y-1/2 font-bold text-[#0F0E0D]/50 dark:text-white/50">$</span>
-                    <input type="number" min="0" step="0.01" value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} className="w-full bg-[#FBF9F6] dark:bg-white/5 pl-9 pr-5 py-4 rounded-2xl outline-none text-sm font-bold text-[#0F0E0D] dark:text-white focus:bg-white dark:focus:bg-[#1A1A1A]" />
+                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-sm font-bold text-[#0F0E0D]/40 dark:text-white/40">LKR</span>
+                    <input type="number" min="0" step="0.01" value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} className="w-full bg-[#FBF9F6] dark:bg-white/5 pl-14 pr-5 py-4 rounded-2xl outline-none text-sm font-bold text-[#0F0E0D] dark:text-white focus:bg-white dark:focus:bg-[#1A1A1A]" />
                   </div>
                 </div>
               </div>
@@ -291,7 +288,7 @@ const handleSaveOrder = async () => {
                           <span className="text-[10px] uppercase tracking-widest font-bold text-[#0F0E0D]/60 dark:text-white/60">Qty: {item.qty || item.quantity || 1}</span>
                         </div>
                         <p className="text-sm font-extrabold text-[#0F0E0D] dark:text-white mt-1.5">
-                          ${((item.price || item.unit_price || 0) * (item.qty || item.quantity || 1)).toFixed(2)}
+                          LKR {((item.price || item.unit_price || 0) * (item.qty || item.quantity || 1)).toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -302,15 +299,15 @@ const handleSaveOrder = async () => {
               <div className="mt-8 pt-6 border-t border-[#EBE6E0] dark:border-white/10 space-y-4">
                 <div className="flex justify-between items-center text-sm">
                   <span className="font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 text-[10px]">Subtotal</span>
-                  <span className="font-bold text-[#0F0E0D] dark:text-white">${subTotal.toFixed(2)}</span>
+                  <span className="font-bold text-[#0F0E0D] dark:text-white">LKR {subTotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 text-[10px]">Delivery Fee</span>
-                  <span className="font-bold text-[#0F0E0D] dark:text-white">${parsedDeliveryFee.toFixed(2)}</span>
+                  <span className="font-bold text-[#0F0E0D] dark:text-white">LKR {parsedDeliveryFee.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center pt-5 border-t border-[#EBE6E0] dark:border-white/10">
                   <span className="font-extrabold uppercase tracking-widest text-[#0F0E0D] dark:text-white text-xs">Total Amount</span>
-                  <span className="text-2xl sm:text-3xl font-extrabold text-[#0F0E0D] dark:text-white tracking-tight">${finalTotal.toFixed(2)}</span>
+                  <span className="text-2xl sm:text-3xl font-extrabold text-[#0F0E0D] dark:text-white tracking-tight">LKR {finalTotal.toFixed(2)}</span>
                 </div>
               </div>
             </motion.div>
