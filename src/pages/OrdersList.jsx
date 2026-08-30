@@ -217,7 +217,7 @@ export default function OrdersList() {
                         </td>
 
                         <td className="px-4 sm:px-6 py-4 sm:py-5 font-extrabold text-[#0F0E0D] dark:text-white text-base tracking-tight transition-colors">
-                          ${Number(order.total_amount || 0).toFixed(2)}
+                          LKR {Number(order.total_amount || 0).toFixed(2)}
                         </td>
                         
                         <td className="px-4 sm:px-6 py-4 sm:py-5">
