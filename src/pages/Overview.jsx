@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom'; // Navigation walata add kala
 import { DollarSign, Users, Package, TrendingUp, TrendingDown, MoreHorizontal, ShoppingBag, Loader2 } from 'lucide-react';
 import { orderService } from '../services/orderService';
 import { productService } from '../services/productService';
 
 export default function Overview() {
+  const navigate = useNavigate(); // Hook eka load karanawa
   const [loading, setLoading] = useState(true);
   
   // Real metrics states
@@ -15,31 +17,30 @@ export default function Overview() {
     totalProducts: 0
   });
 
+  const [allOrders, setAllOrders] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
+
+  // Chart States
+  const [timeframe, setTimeframe] = useState('This Year');
+  const [chartData, setChartData] = useState([]);
+  const [maxRevenue, setMaxRevenue] = useState(100);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        // Backend eken orders saha products dekama gannawa
         const [orders, products] = await Promise.all([
           orderService.getAll(),
           productService.getAll()
         ]);
 
-        // 1. Calculate Total Revenue
+        setAllOrders(orders);
+
         const revenue = orders.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0);
-
-        // 2. Calculate Active Orders (Pending & Processing)
-        const active = orders.filter(o => 
-          ['PENDING', 'PROCESSING'].includes((o.status || '').toUpperCase())
-        ).length;
-
-        // 3. Calculate Total Customers (Unique Emails)
+        const active = orders.filter(o => ['PENDING', 'PROCESSING'].includes((o.status || '').toUpperCase())).length;
         const uniqueCustomers = new Set(orders.map(o => o.customer_email).filter(Boolean)).size;
 
-        // 4. Update Metrics
         setMetrics({
           totalRevenue: revenue,
           activeOrders: active,
@@ -47,11 +48,7 @@ export default function Overview() {
           totalProducts: products.length
         });
 
-        // 5. Get 4 Most Recent Orders
-        // (Assuming orders are already sorted by date desc from backend)
         setRecentOrders(orders.slice(0, 4));
-
-        // 6. Get Top 3 Products (For now, picking first 3)
         setTopProducts(products.slice(0, 3));
 
       } catch (error) {
@@ -64,6 +61,90 @@ export default function Overview() {
     fetchDashboardData();
   }, []);
 
+  // Dynamic Chart Calculation Effect
+  useEffect(() => {
+    if (!allOrders) return;
+
+    const now = new Date();
+    let labels = [];
+    let data = [];
+
+    if (timeframe === 'This Year') {
+      labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      data = Array(12).fill(0);
+      
+      allOrders.forEach(order => {
+         const date = new Date(order.created_at);
+         if (date.getFullYear() === now.getFullYear()) {
+           data[date.getMonth()] += Number(order.total_amount) || 0;
+         }
+      });
+    } else if (timeframe === 'Last 6 Months') {
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        labels.push(d.toLocaleString('default', { month: 'short' }));
+        data.push(0);
+      }
+      
+      allOrders.forEach(order => {
+         const date = new Date(order.created_at);
+         const monthDiff = (now.getFullYear() - date.getFullYear()) * 12 + (now.getMonth() - date.getMonth());
+         if (monthDiff >= 0 && monthDiff < 6) {
+           data[5 - monthDiff] += Number(order.total_amount) || 0;
+         }
+      });
+    }
+
+    const formattedData = labels.map((label, i) => ({ month: label, revenue: data[i] }));
+    setChartData(formattedData);
+    
+    const highest = Math.max(...data);
+    setMaxRevenue(highest > 0 ? highest : 100);
+
+  }, [allOrders, timeframe]);
+
+  // Dynamic SVG Path Generators
+  const generateChartPaths = () => {
+    if (chartData.length === 0) return { linePath: '', areaPath: '', points: [] };
+
+    const minX = 0;
+    const maxX = 1000;
+    const minY = 50; 
+    const maxY = 250; 
+
+    const points = chartData.map((d, i) => {
+      const x = chartData.length > 1 ? minX + (i * (maxX - minX) / (chartData.length - 1)) : 500;
+      const y = maxY - (d.revenue / maxRevenue) * (maxY - minY);
+      return { x, y, revenue: d.revenue, month: d.month };
+    });
+
+    let linePath = `M ${points[0]?.x},${points[0]?.y} `;
+    let areaPath = `M ${points[0]?.x},${maxY} L ${points[0]?.x},${points[0]?.y} `;
+
+    for (let i = 1; i < points.length; i++) {
+      const pPrev = points[i - 1];
+      const p = points[i];
+      const cp1x = (pPrev.x + p.x) / 2;
+      const cp1y = pPrev.y;
+      const cp2x = (pPrev.x + p.x) / 2;
+      const cp2y = p.y;
+      
+      linePath += `C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p.x},${p.y} `;
+      areaPath += `C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p.x},${p.y} `;
+    }
+    
+    areaPath += `L ${points[points.length - 1]?.x},${maxY} Z`;
+
+    return { linePath, areaPath, points };
+  };
+
+  const { linePath, areaPath, points } = generateChartPaths();
+
+  const yLabels = [1, 0.75, 0.5, 0.25, 0].map(multiplier => {
+    const val = maxRevenue * multiplier;
+    return val >= 1000 ? (val / 1000).toFixed(1) + 'k' : Math.round(val);
+  });
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
@@ -73,9 +154,6 @@ export default function Overview() {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
   };
-
-  // Mock data for the chart labels (SVG is static for design)
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
 
   if (loading) {
     return (
@@ -95,16 +173,16 @@ export default function Overview() {
           <StatCard 
             title="Total Revenue" 
             value={`$${metrics.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
-            trend="+12.5%" 
+            trend="Live" 
             isPositive={true} 
             icon={<DollarSign size={24} />} 
             variants={itemVariants} 
-            isDark={true} // Enables the black design
+            isDark={true}
           />
           <StatCard 
             title="Active Orders" 
             value={metrics.activeOrders.toString()} 
-            trend="+5.2%" 
+            trend="Pending/Processing" 
             isPositive={true} 
             icon={<ShoppingBag size={24} />} 
             variants={itemVariants} 
@@ -112,15 +190,15 @@ export default function Overview() {
           <StatCard 
             title="Total Customers" 
             value={metrics.totalCustomers.toString()} 
-            trend="-1.4%" 
-            isPositive={false} 
+            trend="Unique Buyers" 
+            isPositive={true} 
             icon={<Users size={24} />} 
             variants={itemVariants} 
           />
           <StatCard 
             title="Total Products" 
             value={metrics.totalProducts.toString()} 
-            trend="+8.1%" 
+            trend="In Database" 
             isPositive={true} 
             icon={<Package size={24} />} 
             variants={itemVariants} 
@@ -136,24 +214,29 @@ export default function Overview() {
                 <h2 className="text-xl font-bold text-[#0F0E0D] dark:text-white transition-colors">Revenue Analytics</h2>
                 <p className="text-sm text-[#0F0E0D]/50 dark:text-white/50 font-medium mt-1 transition-colors">Monthly performance summary</p>
               </div>
-              <select className="bg-[#EBE6E0]/50 dark:bg-white/10 text-[#0F0E0D] dark:text-white px-4 py-2.5 rounded-xl text-sm font-bold border-none outline-none cursor-pointer hover:bg-[#EBE6E0] dark:hover:bg-white/20 transition-colors">
+              <select 
+                value={timeframe}
+                onChange={(e) => setTimeframe(e.target.value)}
+                className="bg-[#EBE6E0]/50 dark:bg-white/10 text-[#0F0E0D] dark:text-white px-4 py-2.5 rounded-xl text-sm font-bold border-none outline-none cursor-pointer hover:bg-[#EBE6E0] dark:hover:bg-white/20 transition-colors"
+              >
                 <option className="dark:bg-[#111111]">This Year</option>
                 <option className="dark:bg-[#111111]">Last 6 Months</option>
               </select>
             </div>
             
-            {/* The Actual Chart Area (Kept static visual for UI consistency) */}
+            {/* Chart Area */}
             <div className="flex-1 relative flex flex-col">
+              
               <div className="absolute inset-0 flex flex-col justify-between pt-2 pb-8 px-2">
-                {[100, 75, 50, 25, 0].map((val, i) => (
+                {yLabels.map((val, i) => (
                   <div key={i} className="flex items-center gap-4 w-full">
-                    <span className="text-xs font-bold text-[#0F0E0D]/30 dark:text-white/30 w-8 text-right transition-colors">{val}k</span>
+                    <span className="text-xs font-bold text-[#0F0E0D]/40 dark:text-white/40 w-10 text-right transition-colors">${val}</span>
                     <div className="flex-1 border-t border-dashed border-[#EBE6E0] dark:border-white/10 transition-colors"></div>
                   </div>
                 ))}
               </div>
 
-              <div className="absolute inset-0 ml-14 mb-8">
+              <div className="absolute inset-0 ml-[60px] mb-8">
                 <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 1000 300">
                   <defs>
                     <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1" className="text-[#0F0E0D] dark:text-white transition-colors">
@@ -162,64 +245,72 @@ export default function Overview() {
                     </linearGradient>
                   </defs>
                   
-                  <path 
-                    d="M 0,250 C 100,200 200,280 300,180 C 400,80 500,150 600,100 C 700,50 800,120 900,40 C 950,0 1000,50 1000,50 L 1000,300 L 0,300 Z" 
-                    fill="url(#colorRevenue)" 
-                  />
-                  <path 
-                    d="M 0,250 C 100,200 200,280 300,180 C 400,80 500,150 600,100 C 700,50 800,120 900,40 C 950,0 1000,50 1000,50" 
-                    fill="none" 
-                    className="stroke-[#0F0E0D] dark:stroke-white transition-colors drop-shadow-md"
-                    strokeWidth="4" 
-                    strokeLinecap="round" 
-                  />
-                  
-                  {[
-                    { cx: "300", cy: "180" },
-                    { cx: "600", cy: "100" },
-                    { cx: "900", cy: "40" }
-                  ].map((point, i) => (
-                    <circle 
-                      key={i} 
-                      cx={point.cx} 
-                      cy={point.cy} 
-                      r="6" 
-                      className="fill-white dark:fill-[#111111] stroke-[#0F0E0D] dark:stroke-white transition-all duration-300 cursor-pointer hover:scale-125 origin-center" 
-                      strokeWidth="3" 
-                    />
-                  ))}
+                  {points.length > 0 && (
+                    <>
+                      <path d={areaPath} fill="url(#colorRevenue)" />
+                      <path 
+                        d={linePath} 
+                        fill="none" 
+                        className="stroke-[#0F0E0D] dark:stroke-white transition-colors drop-shadow-md"
+                        strokeWidth="4" 
+                        strokeLinecap="round" 
+                      />
+                      
+                      {points.map((point, i) => (
+                        <circle 
+                          key={i} 
+                          cx={point.x} 
+                          cy={point.y} 
+                          r="6" 
+                          className="fill-white dark:fill-[#111111] stroke-[#0F0E0D] dark:stroke-white transition-all duration-300 cursor-pointer hover:scale-125 origin-center" 
+                          strokeWidth="3" 
+                        >
+                          <title>{point.month}: ${point.revenue.toFixed(2)}</title>
+                        </circle>
+                      ))}
+                    </>
+                  )}
                 </svg>
               </div>
 
-              <div className="mt-auto ml-14 flex justify-between pr-4 relative z-10">
-                {months.map((month, i) => (
-                  <span key={i} className="text-xs font-bold text-[#0F0E0D]/40 dark:text-white/40 transition-colors">{month}</span>
+              <div className="mt-auto ml-[60px] flex justify-between pr-2 relative z-10">
+                {chartData.map((d, i) => (
+                  <span key={i} className="text-[10px] sm:text-xs font-bold text-[#0F0E0D]/40 dark:text-white/40 transition-colors">
+                    {d.month}
+                  </span>
                 ))}
               </div>
             </div>
           </motion.div>
 
           {/* TOP SELLING PRODUCTS */}
-          <motion.div variants={itemVariants} className="bg-white dark:bg-[#111111] p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-[#EBE6E0] dark:border-white/10 transition-colors">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-[#0F0E0D] dark:text-white transition-colors">Top Products</h2>
-              <button className="text-[#0F0E0D]/50 dark:text-white/50 hover:text-[#0F0E0D] dark:hover:text-white transition-colors"><MoreHorizontal size={20} /></button>
+          <motion.div variants={itemVariants} className="bg-white dark:bg-[#111111] p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-[#EBE6E0] dark:border-white/10 flex flex-col justify-between min-h-[420px] transition-colors">
+            <div>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-[#0F0E0D] dark:text-white transition-colors">Top Products</h2>
+                <button className="text-[#0F0E0D]/50 dark:text-white/50 hover:text-[#0F0E0D] dark:hover:text-white transition-colors"><MoreHorizontal size={20} /></button>
+              </div>
+              <div className="space-y-5">
+                {topProducts.length > 0 ? topProducts.map((prod, idx) => (
+                  <TopProductRow 
+                    key={prod.id || idx}
+                    name={prod.name} 
+                    category={prod.category || "General"} 
+                    price={`$${(prod.base_price || 0).toFixed(2)}`} 
+                    sales={`${Math.floor(Math.random() * 50) + 10} sales`} 
+                    img={prod.img_url || "https://via.placeholder.com/150"} 
+                  />
+                )) : (
+                  <p className="text-sm font-bold text-[#0F0E0D]/40 dark:text-white/40 text-center py-4">No products found</p>
+                )}
+              </div>
             </div>
-            <div className="space-y-5">
-              {topProducts.length > 0 ? topProducts.map((prod, idx) => (
-                <TopProductRow 
-                  key={prod.id || idx}
-                  name={prod.name} 
-                  category={prod.category || "General"} 
-                  price={`$${(prod.base_price || 0).toFixed(2)}`} 
-                  sales={`${Math.floor(Math.random() * 50) + 10} sales`} 
-                  img={prod.img_url || "https://via.placeholder.com/150"} 
-                />
-              )) : (
-                <p className="text-sm font-bold text-[#0F0E0D]/40 dark:text-white/40 text-center py-4">No products found</p>
-              )}
-            </div>
-            <button className="w-full mt-6 py-3.5 bg-[#EBE6E0]/50 dark:bg-white/10 text-[#0F0E0D] dark:text-white font-bold rounded-2xl text-sm hover:bg-[#EBE6E0] dark:hover:bg-white/20 transition-colors">
+            
+            {/* VIEW ALL BUTTON (Restored) */}
+            <button 
+              onClick={() => navigate('/products')} // Kelinma Products page ekata yanawa
+              className="w-full mt-6 py-3.5 bg-[#EBE6E0]/50 dark:bg-white/10 text-[#0F0E0D] dark:text-white font-bold rounded-2xl text-sm hover:bg-[#EBE6E0] dark:hover:bg-white/20 transition-colors"
+            >
               View All Products
             </button>
           </motion.div>
@@ -229,7 +320,7 @@ export default function Overview() {
         <motion.div variants={itemVariants} className="bg-white dark:bg-[#111111] p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-[#EBE6E0] dark:border-white/10 overflow-hidden transition-colors">
            <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-[#0F0E0D] dark:text-white transition-colors">Recent Orders</h2>
-              <button className="text-sm font-bold text-[#0F0E0D]/60 dark:text-white/60 hover:text-[#0F0E0D] dark:hover:text-white transition-colors">See All</button>
+              <button onClick={() => navigate('/orders')} className="text-sm font-bold text-[#0F0E0D]/60 dark:text-white/60 hover:text-[#0F0E0D] dark:hover:text-white transition-colors">See All</button>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
