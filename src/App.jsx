@@ -40,6 +40,7 @@ export default function App() {
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/orders" element={<OrdersList />} />
             <Route path="/add-order" element={<AddOrder />} />
+            <Route path="/edit-order/:id" element={<EditOrder />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
           
