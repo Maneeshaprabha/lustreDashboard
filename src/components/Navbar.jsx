@@ -1,15 +1,49 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Calendar, TrendingUp, ChevronDown, User, Settings, LogOut, Menu } from "lucide-react"; // <-- Imported Menu
+import { Search, Calendar, TrendingUp, ChevronDown, User, Settings, LogOut, Menu } from "lucide-react";
 import ThemeToggle from "./ThemeToggle"; 
+import { orderService } from '../services/orderService';
+import { expenseService } from '../services/expenseService';
 
-export default function Navbar({ title, onMenuClick }) { // <-- Added onMenuClick prop
+export default function Navbar({ title, onMenuClick }) { 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef(null);
   const navigate = useNavigate();
 
+  // Dynamic Profit & Date States
+  const [totalProfit, setTotalProfit] = useState(0);
+  const [currentDate, setCurrentDate] = useState("");
+
   useEffect(() => {
+    // --- ALUTH: Set dynamic exact date (e.g., "Aug 30, 2026") ---
+    const date = new Date();
+    setCurrentDate(date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }));
+
+    // Fetch and calculate total profit
+    const fetchProfitData = async () => {
+      try {
+        const [orders, expenses] = await Promise.all([
+          orderService.getAll(),
+          expenseService.getAll()
+        ]);
+
+        // Salli aapa okkoma (Total Revenue)
+        const totalRevenue = orders.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0);
+        
+        // Viyadam okkoma (Total Expenses)
+        const totalExpenses = expenses.reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
+
+        // Suddha Laabaya (Net Profit)
+        setTotalProfit(totalRevenue - totalExpenses);
+
+      } catch (error) {
+        console.error("Failed to fetch profit data for navbar", error);
+      }
+    };
+
+    fetchProfitData();
+
     function handleClickOutside(event) {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setIsProfileOpen(false);
@@ -53,16 +87,16 @@ export default function Navbar({ title, onMenuClick }) { // <-- Added onMenuClic
           />
         </div>
 
-        {/* Current Profit Pill */}
+        {/* Current Profit Pill (Dynamic) */}
         <div className="hidden xl:flex px-4 py-2.5 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-[1.5rem] text-xs uppercase tracking-widest font-bold text-[#0F0E0D] dark:text-white hover:bg-[#FBF9F6] dark:hover:bg-white/5 transition-colors items-center gap-2 cursor-pointer whitespace-nowrap shadow-[0_5px_15px_-5px_rgba(0,0,0,0.02)]">
           <TrendingUp size={14} strokeWidth={2.5} className="text-[#2E4A35] dark:text-green-400" />
-          <span>$124,563</span>
+          <span>${totalProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
         </div>
 
-        {/* Date Pill */}
+        {/* Date Pill (Dynamic Full Date) */}
         <div className="hidden sm:flex px-4 py-2.5 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-[1.5rem] text-xs uppercase tracking-widest font-bold text-[#0F0E0D] dark:text-white hover:bg-[#FBF9F6] dark:hover:bg-white/5 transition-colors items-center gap-2 cursor-pointer whitespace-nowrap shadow-[0_5px_15px_-5px_rgba(0,0,0,0.02)]">
           <Calendar size={14} strokeWidth={2.5} className="text-[#0F0E0D]/70 dark:text-white/70" />
-          <span>Aug 2026</span>
+          <span>{currentDate}</span>
         </div>
 
         {/* --- THEME TOGGLE BUTTON --- */}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Receipt, TrendingDown, Plus, Trash2, Tag, Box, X, Pencil, Loader2, Save, AlertCircle, Check, AlertTriangle
+  Receipt, TrendingDown, Plus, Trash2, Tag, Box, X, Pencil, Loader2, Save, AlertCircle, Check, AlertTriangle, Layers
 } from 'lucide-react';
 import { expenseService } from '../services/expenseService';
 
@@ -10,32 +10,27 @@ export default function Expenses() {
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Custom Notification State
   const [notification, setNotification] = useState({ show: false, message: '', type: 'error' });
 
-  // Modal States
   const [editModal, setEditModal] = useState({ isOpen: false, data: null });
   const [isUpdating, setIsUpdating] = useState(false);
 
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, idToRemove: null });
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Categories State
-  const defaultCategories = ['Packaging', 'Branding', 'Office Supplies', 'Logistics', 'Miscellaneous'];
+  // --- ALUTH: 'Wholesale' Category eka add kala ---
+  const defaultCategories = ['Wholesale', 'Packaging', 'Branding', 'Office Supplies', 'Logistics', 'Miscellaneous'];
   const [categories, setCategories] = useState(defaultCategories);
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [customCategory, setCustomCategory] = useState('');
 
-  // Add Form State
   const [newItem, setNewItem] = useState('');
   const [newCategory, setNewCategory] = useState(defaultCategories[0]);
   const [newAmount, setNewAmount] = useState('');
 
-  // --- ALUTH: Pagination States ---
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5; // Pituwakata items 5i
+  const itemsPerPage = 5;
 
-  // Fetch Data from Backend
   useEffect(() => {
     fetchExpenses();
   }, []);
@@ -62,7 +57,6 @@ export default function Expenses() {
     setTimeout(() => setNotification(prev => ({ ...prev, show: false })), 3500);
   };
 
-  // --- Handle CREATE ---
   const handleAddSubmit = async (e) => {
     e.preventDefault();
     if (!newItem || !newAmount) return;
@@ -77,7 +71,7 @@ export default function Expenses() {
 
       const createdExpense = await expenseService.create(payload);
       setExpenses([createdExpense, ...expenses]);
-      setCurrentPage(1); // Aluth ekak add kalama 1 weni pituwata yanawa
+      setCurrentPage(1); 
       showNotification("Expense recorded successfully!", "success");
 
       setNewItem('');
@@ -91,7 +85,6 @@ export default function Expenses() {
     }
   };
 
-  // --- Handle EDIT ---
   const handleEditClick = (exp) => {
     setEditModal({ isOpen: true, data: { ...exp } });
   };
@@ -128,7 +121,6 @@ export default function Expenses() {
     }
   };
 
-  // --- Handle DELETE ---
   const handleDeleteClick = (id) => {
     setDeleteModal({ isOpen: true, idToRemove: id });
   };
@@ -142,7 +134,6 @@ export default function Expenses() {
       const newExpenses = expenses.filter(exp => exp.id !== deleteModal.idToRemove);
       setExpenses(newExpenses);
       
-      // Delete kalama page eka his wenawanam kalin pituwata yanna
       const newTotalPages = Math.ceil(newExpenses.length / itemsPerPage);
       if (currentPage > newTotalPages && newTotalPages > 0) {
         setCurrentPage(newTotalPages);
@@ -158,7 +149,6 @@ export default function Expenses() {
     }
   };
 
-  // Handle Custom Category
   const handleAddCustomCategory = () => {
     if (customCategory.trim() && !categories.includes(customCategory.trim())) {
       const formattedCategory = customCategory.trim();
@@ -169,7 +159,6 @@ export default function Expenses() {
     setShowAddCategory(false);
   };
 
-  // --- ALUTH: Pagination Calculations ---
   const indexOfLastExpense = currentPage * itemsPerPage;
   const indexOfFirstExpense = indexOfLastExpense - itemsPerPage;
   const currentExpenses = expenses.slice(indexOfFirstExpense, indexOfLastExpense);
@@ -177,8 +166,10 @@ export default function Expenses() {
 
   const totalSpent = expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
 
+  // --- ALUTH: Wholesale Style eka add kala ---
   const getCategoryStyle = (category) => {
     switch(category) {
+      case 'Wholesale': return 'bg-[#F4F8F9] dark:bg-blue-500/20 text-[#2E3A4A] dark:text-blue-400 border border-[#E2E6EB] dark:border-blue-500/30';
       case 'Packaging': return 'bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D] border border-transparent';
       case 'Branding': return 'bg-[#FBF9F6] dark:bg-white/10 border border-[#EBE6E0] dark:border-white/20 text-[#0F0E0D] dark:text-white';
       case 'Office Supplies': return 'bg-[#F4F8F4] dark:bg-green-500/20 text-[#2E4A35] dark:text-green-400 border border-[#E2EBE2] dark:border-green-500/30';
@@ -206,7 +197,6 @@ export default function Expenses() {
   return (
     <div className="w-full bg-[#FBF9F6] dark:bg-[#0A0A0A] min-h-screen transition-colors duration-300 relative">
       
-      {/* CUSTOM NOTIFICATION TOAST */}
       <AnimatePresence>
         {notification.show && (
           <motion.div 
@@ -237,16 +227,15 @@ export default function Expenses() {
 
       <motion.div variants={containerVariants} initial="hidden" animate="visible" className="p-4 sm:p-6 md:p-10 max-w-[1400px] w-full mx-auto space-y-6 sm:space-y-8">
         
-        {/* HEADER CONTROLS */}
         <motion.div variants={itemVariants} className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F0E0D] dark:text-white tracking-tight flex items-center gap-2 transition-colors">Extra Bills & Expenses</h1>
-            <p className="text-[10px] text-[#0F0E0D]/50 dark:text-white/50 font-bold uppercase tracking-[0.3em] mt-1 sm:mt-2 transition-colors">Track packaging, branding, and operational costs</p>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F0E0D] dark:text-white tracking-tight flex items-center gap-2 transition-colors">Expenses & Stock</h1>
+            <p className="text-[10px] text-[#0F0E0D]/50 dark:text-white/50 font-bold uppercase tracking-[0.3em] mt-1 sm:mt-2 transition-colors">Track inventory, packaging & operational costs</p>
           </div>
         </motion.div>
 
-        {/* TOP METRICS CARDS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+        {/* --- ALUTH: 4 Grid Layout eka --- */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <StatCard 
             title="Total Expenses" 
             value={`$${totalSpent.toFixed(2)}`} 
@@ -255,17 +244,25 @@ export default function Expenses() {
             variants={itemVariants} 
             isDark={true} 
           />
+          {/* Wholesale Costs Card */}
+          <StatCard 
+            title="Wholesale Purchases" 
+            value={`$${expenses.filter(e => e.category === 'Wholesale').reduce((s, e) => s + Number(e.amount), 0).toFixed(2)}`} 
+            trend="Cost of Goods" 
+            icon={<Layers size={24} />} 
+            variants={itemVariants} 
+          />
           <StatCard 
             title="Packaging Costs" 
             value={`$${expenses.filter(e => e.category === 'Packaging').reduce((s, e) => s + Number(e.amount), 0).toFixed(2)}`} 
-            trend="Courier Bags & Boxes" 
+            trend="Bags & Boxes" 
             icon={<Box size={24} />} 
             variants={itemVariants} 
           />
           <StatCard 
             title="Branding & Marketing" 
             value={`$${expenses.filter(e => e.category === 'Branding').reduce((s, e) => s + Number(e.amount), 0).toFixed(2)}`} 
-            trend="Tags & Business Cards" 
+            trend="Tags & Cards" 
             icon={<Tag size={24} />} 
             variants={itemVariants} 
           />
@@ -273,7 +270,6 @@ export default function Expenses() {
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 sm:gap-8">
           
-          {/* EXPENSES TABLE (LEFT COLUMN) */}
           <motion.div variants={itemVariants} className="xl:col-span-2 bg-white dark:bg-[#111111] rounded-[2.5rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.03)] border border-[#EBE6E0] dark:border-white/10 overflow-hidden transition-colors flex flex-col justify-between">
             <div className="p-6 sm:p-8 md:p-10 pb-0">
               <div className="flex justify-between items-center mb-6 sm:mb-8">
@@ -342,7 +338,6 @@ export default function Expenses() {
               </div>
             </div>
 
-            {/* --- ALUTH: PAGINATION FOOTER --- */}
             {expenses.length > 0 && (
               <div className="px-6 sm:px-8 py-5 mt-4 border-t border-[#EBE6E0] dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/50 dark:text-white/50 transition-colors">
                 <p className="text-center sm:text-left">
@@ -368,11 +363,11 @@ export default function Expenses() {
             )}
           </motion.div>
 
-          {/* ADD EXPENSE FORM (RIGHT COLUMN) */}
+          {/* ADD EXPENSE FORM */}
           <motion.div variants={itemVariants} className="bg-white dark:bg-[#111111] p-6 sm:p-8 md:p-10 rounded-[2.5rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.03)] border border-[#EBE6E0] dark:border-white/10 flex flex-col h-fit transition-colors">
             <div>
               <h2 className="text-xl sm:text-2xl font-bold text-[#0F0E0D] dark:text-white mb-2 transition-colors">Record New Bill</h2>
-              <p className="text-[10px] text-[#0F0E0D]/50 dark:text-white/50 font-bold uppercase tracking-[0.25em] mb-6 sm:mb-8 transition-colors">Log your operational costs</p>
+              <p className="text-[10px] text-[#0F0E0D]/50 dark:text-white/50 font-bold uppercase tracking-[0.25em] mb-6 sm:mb-8 transition-colors">Log your operational & stock costs</p>
               
               <form onSubmit={handleAddSubmit} className="space-y-5 sm:space-y-6">
                 <div>
@@ -382,7 +377,7 @@ export default function Expenses() {
                     required
                     value={newItem}
                     onChange={(e) => setNewItem(e.target.value)}
-                    placeholder="e.g. Courier Bags" 
+                    placeholder="e.g. 50 Linen Shirts" 
                     className="w-full bg-[#FBF9F6] dark:bg-white/5 px-5 py-4 rounded-2xl border border-transparent focus:bg-white dark:focus:bg-[#1A1A1A] focus:border-[#0F0E0D]/30 dark:focus:border-white/30 outline-none transition-all text-sm font-bold text-[#0F0E0D] dark:text-white placeholder:text-[#0F0E0D]/30 dark:placeholder:text-white/30" 
                   />
                 </div>
@@ -620,7 +615,6 @@ export default function Expenses() {
   );
 }
 
-// Subcomponent for the top cards
 function StatCard({ title, value, trend, icon, variants, isDark = false }) {
   const cardBg = isDark ? "bg-[#111111] dark:bg-[#E9E3DB]" : "bg-white dark:bg-[#111111]";
   const textColor = isDark ? "text-white dark:text-[#0F0E0D]" : "text-[#0F0E0D] dark:text-white";
