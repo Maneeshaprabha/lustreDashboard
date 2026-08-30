@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Loader2, AlertCircle } from 'lucide-react'; // <-- AlertCircle add kala
 import { authService } from '../services/authService'; 
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -9,7 +9,6 @@ export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const navigate = useNavigate();
   
-  // Bring in the auth context to save the user globally
   const { setAuth } = useAuth();
 
   // Form State Variables
@@ -19,32 +18,29 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Backend Integration with Axios authService
+  // Backend Integration
   const handleAuth = async (e) => {
     e.preventDefault();
     setLoading(true);
     setErrorMsg('');
 
-    // --- FIX: Remove any accidental invisible spaces from the email ---
     const cleanEmail = email.trim();
 
     try {
       let data;
-      // 1. Send data to the Express Backend using the clean email
       if (isLogin) {
         data = await authService.login(cleanEmail, password); 
       } else {
         data = await authService.register(cleanEmail, password, fullName); 
       }
       
-      // 2. Save the login token
       if (setAuth) setAuth(data);
-      
-      // 3. Redirect to the dashboard
       navigate('/overview');
       
     } catch (err) {
-      setErrorMsg(err.message || 'Authentication failed. Please try again.');
+      // --- FIX: Backend eken ena exact error message eka catch kirima ---
+      const backendError = err.response?.data?.message || err.message || 'Authentication failed. Please try again.';
+      setErrorMsg(backendError);
     } finally {
       setLoading(false);
     }
@@ -91,7 +87,6 @@ export default function Auth() {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-10 md:p-16 relative">
         <div className="w-full max-w-md">
           
-          {/* Mobile Logo (Only visible on small screens) */}
           <div className="flex items-center gap-3 lg:hidden mb-10">
             <div className="w-10 h-10 bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D] flex items-center justify-center rounded-xl font-extrabold text-xl transition-colors">
               L
@@ -188,16 +183,20 @@ export default function Auth() {
               </div>
             </div>
 
-            {/* Error Message Display */}
-            {errorMsg && (
-              <motion.div 
-                initial={{ opacity: 0 }} 
-                animate={{ opacity: 1 }} 
-                className="text-red-500 dark:text-red-400 text-xs font-bold text-center mt-2"
-              >
-                {errorMsg}
-              </motion.div>
-            )}
+            {/* --- FIX: Improved Error Message UI --- */}
+            <AnimatePresence>
+              {errorMsg && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10, height: 0 }} 
+                  animate={{ opacity: 1, y: 0, height: 'auto' }} 
+                  exit={{ opacity: 0, y: -10, height: 0 }}
+                  className="flex items-center gap-3 p-4 mt-2 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20"
+                >
+                  <AlertCircle className="text-red-500 dark:text-red-400 shrink-0" size={18} strokeWidth={2.5} />
+                  <span className="text-red-600 dark:text-red-400 text-xs sm:text-sm font-bold">{errorMsg}</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <motion.button 
               type="submit"
