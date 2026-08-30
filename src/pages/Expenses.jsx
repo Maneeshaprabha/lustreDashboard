@@ -10,10 +10,10 @@ export default function Expenses() {
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  // --- ALUTH: Custom Notification State ---
+  // Custom Notification State
   const [notification, setNotification] = useState({ show: false, message: '', type: 'error' });
 
-  // --- ALUTH: Modal States ---
+  // Modal States
   const [editModal, setEditModal] = useState({ isOpen: false, data: null });
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -30,6 +30,10 @@ export default function Expenses() {
   const [newItem, setNewItem] = useState('');
   const [newCategory, setNewCategory] = useState(defaultCategories[0]);
   const [newAmount, setNewAmount] = useState('');
+
+  // --- ALUTH: Pagination States ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5; // Pituwakata items 5i
 
   // Fetch Data from Backend
   useEffect(() => {
@@ -73,6 +77,7 @@ export default function Expenses() {
 
       const createdExpense = await expenseService.create(payload);
       setExpenses([createdExpense, ...expenses]);
+      setCurrentPage(1); // Aluth ekak add kalama 1 weni pituwata yanawa
       showNotification("Expense recorded successfully!", "success");
 
       setNewItem('');
@@ -133,7 +138,16 @@ export default function Expenses() {
     try {
       setIsDeleting(true);
       await expenseService.delete(deleteModal.idToRemove);
-      setExpenses(expenses.filter(exp => exp.id !== deleteModal.idToRemove));
+      
+      const newExpenses = expenses.filter(exp => exp.id !== deleteModal.idToRemove);
+      setExpenses(newExpenses);
+      
+      // Delete kalama page eka his wenawanam kalin pituwata yanna
+      const newTotalPages = Math.ceil(newExpenses.length / itemsPerPage);
+      if (currentPage > newTotalPages && newTotalPages > 0) {
+        setCurrentPage(newTotalPages);
+      }
+
       showNotification("Expense deleted successfully!", "success");
       setDeleteModal({ isOpen: false, idToRemove: null });
     } catch (error) {
@@ -154,6 +168,12 @@ export default function Expenses() {
     setCustomCategory('');
     setShowAddCategory(false);
   };
+
+  // --- ALUTH: Pagination Calculations ---
+  const indexOfLastExpense = currentPage * itemsPerPage;
+  const indexOfFirstExpense = indexOfLastExpense - itemsPerPage;
+  const currentExpenses = expenses.slice(indexOfFirstExpense, indexOfLastExpense);
+  const totalPages = Math.ceil(expenses.length / itemsPerPage);
 
   const totalSpent = expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
 
@@ -186,7 +206,7 @@ export default function Expenses() {
   return (
     <div className="w-full bg-[#FBF9F6] dark:bg-[#0A0A0A] min-h-screen transition-colors duration-300 relative">
       
-      {/* --- CUSTOM NOTIFICATION TOAST --- */}
+      {/* CUSTOM NOTIFICATION TOAST */}
       <AnimatePresence>
         {notification.show && (
           <motion.div 
@@ -254,71 +274,98 @@ export default function Expenses() {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 sm:gap-8">
           
           {/* EXPENSES TABLE (LEFT COLUMN) */}
-          <motion.div variants={itemVariants} className="xl:col-span-2 bg-white dark:bg-[#111111] p-6 sm:p-8 md:p-10 rounded-[2.5rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.03)] border border-[#EBE6E0] dark:border-white/10 overflow-hidden transition-colors">
-            <div className="flex justify-between items-center mb-6 sm:mb-8">
-              <h2 className="text-xl sm:text-2xl font-bold text-[#0F0E0D] dark:text-white transition-colors">Expense History</h2>
-            </div>
-            
-            <div className="overflow-x-auto min-h-[300px] sm:min-h-[400px]">
-              <table className="w-full text-left border-collapse min-w-[700px]">
-                <thead>
-                  <tr className="text-[#0F0E0D]/50 dark:text-white/50 text-[9px] uppercase tracking-[0.25em] border-b border-[#EBE6E0] dark:border-white/10 transition-colors">
-                    <th className="pb-5 font-bold">Bill ID</th>
-                    <th className="pb-5 font-bold">Item Description</th>
-                    <th className="pb-5 font-bold">Category</th>
-                    <th className="pb-5 font-bold">Date</th>
-                    <th className="pb-5 font-bold text-right">Amount</th>
-                    <th className="pb-5 font-bold text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="text-sm">
-                  <AnimatePresence>
-                    {expenses.map((exp) => (
-                      <motion.tr 
-                        key={exp.id} 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        className="border-b border-[#EBE6E0]/60 dark:border-white/5 hover:bg-[#FBF9F6]/50 dark:hover:bg-white/5 transition-colors group"
-                      >
-                        <td className="py-4 sm:py-5 font-mono font-bold text-[#0F0E0D]/60 dark:text-white/60 text-xs tracking-wider transition-colors">{exp.custom_id}</td>
-                        <td className="py-4 sm:py-5 font-extrabold text-[#0F0E0D] dark:text-white text-sm tracking-tight transition-colors">{exp.item}</td>
-                        <td className="py-4 sm:py-5">
-                          <span className={`px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.2em] rounded-full inline-flex items-center gap-1.5 w-fit transition-colors ${getCategoryStyle(exp.category)}`}>
-                            {exp.category}
-                          </span>
-                        </td>
-                        <td className="py-4 sm:py-5 font-medium text-[#0F0E0D]/60 dark:text-white/60 text-xs transition-colors">{formatDate(exp.created_at)}</td>
-                        <td className="py-4 sm:py-5 font-extrabold text-[#0F0E0D] dark:text-white text-right text-base transition-colors">${Number(exp.amount).toFixed(2)}</td>
-                        <td className="py-4 sm:py-5 text-right">
-                          <div className="flex justify-end gap-1 opacity-100 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
-                            <button 
-                              onClick={() => handleEditClick(exp)}
-                              className="p-2 text-[#0F0E0D]/50 dark:text-white/50 hover:text-[#0F0E0D] dark:hover:text-white transition-colors rounded-xl hover:bg-[#EBE6E0] dark:hover:bg-white/10"
-                              title="Edit Expense"
-                            >
-                              <Pencil size={16} strokeWidth={2.5} />
-                            </button>
-                            <button 
-                              onClick={() => handleDeleteClick(exp.id)}
-                              className="p-2 text-[#0F0E0D]/30 dark:text-white/30 hover:text-[#6A3131] dark:hover:text-red-400 transition-colors rounded-xl hover:bg-[#FFF4F4] dark:hover:bg-red-500/20"
-                              title="Delete Expense"
-                            >
-                              <Trash2 size={16} strokeWidth={2.5} />
-                            </button>
-                          </div>
-                        </td>
-                      </motion.tr>
-                    ))}
-                  </AnimatePresence>
-                  {expenses.length === 0 && (
-                    <tr>
-                      <td colSpan="6" className="py-10 text-center text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/40 dark:text-white/40">No expenses recorded yet.</td>
+          <motion.div variants={itemVariants} className="xl:col-span-2 bg-white dark:bg-[#111111] rounded-[2.5rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.03)] border border-[#EBE6E0] dark:border-white/10 overflow-hidden transition-colors flex flex-col justify-between">
+            <div className="p-6 sm:p-8 md:p-10 pb-0">
+              <div className="flex justify-between items-center mb-6 sm:mb-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-[#0F0E0D] dark:text-white transition-colors">Expense History</h2>
+              </div>
+              
+              <div className="overflow-x-auto min-h-[300px] sm:min-h-[400px]">
+                <table className="w-full text-left border-collapse min-w-[700px]">
+                  <thead>
+                    <tr className="text-[#0F0E0D]/50 dark:text-white/50 text-[9px] uppercase tracking-[0.25em] border-b border-[#EBE6E0] dark:border-white/10 transition-colors">
+                      <th className="pb-5 font-bold">Bill ID</th>
+                      <th className="pb-5 font-bold">Item Description</th>
+                      <th className="pb-5 font-bold">Category</th>
+                      <th className="pb-5 font-bold">Date</th>
+                      <th className="pb-5 font-bold text-right">Amount</th>
+                      <th className="pb-5 font-bold text-right">Actions</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="text-sm">
+                    <AnimatePresence mode="wait">
+                      {currentExpenses.map((exp) => (
+                        <motion.tr 
+                          key={exp.id} 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          className="border-b border-[#EBE6E0]/60 dark:border-white/5 hover:bg-[#FBF9F6]/50 dark:hover:bg-white/5 transition-colors group"
+                        >
+                          <td className="py-4 sm:py-5 font-mono font-bold text-[#0F0E0D]/60 dark:text-white/60 text-xs tracking-wider transition-colors">{exp.custom_id}</td>
+                          <td className="py-4 sm:py-5 font-extrabold text-[#0F0E0D] dark:text-white text-sm tracking-tight transition-colors">{exp.item}</td>
+                          <td className="py-4 sm:py-5">
+                            <span className={`px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.2em] rounded-full inline-flex items-center gap-1.5 w-fit transition-colors ${getCategoryStyle(exp.category)}`}>
+                              {exp.category}
+                            </span>
+                          </td>
+                          <td className="py-4 sm:py-5 font-medium text-[#0F0E0D]/60 dark:text-white/60 text-xs transition-colors">{formatDate(exp.created_at)}</td>
+                          <td className="py-4 sm:py-5 font-extrabold text-[#0F0E0D] dark:text-white text-right text-base transition-colors">${Number(exp.amount).toFixed(2)}</td>
+                          <td className="py-4 sm:py-5 text-right">
+                            <div className="flex justify-end gap-1 opacity-100 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
+                              <button 
+                                onClick={() => handleEditClick(exp)}
+                                className="p-2 text-[#0F0E0D]/50 dark:text-white/50 hover:text-[#0F0E0D] dark:hover:text-white transition-colors rounded-xl hover:bg-[#EBE6E0] dark:hover:bg-white/10"
+                                title="Edit Expense"
+                              >
+                                <Pencil size={16} strokeWidth={2.5} />
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteClick(exp.id)}
+                                className="p-2 text-[#0F0E0D]/30 dark:text-white/30 hover:text-[#6A3131] dark:hover:text-red-400 transition-colors rounded-xl hover:bg-[#FFF4F4] dark:hover:bg-red-500/20"
+                                title="Delete Expense"
+                              >
+                                <Trash2 size={16} strokeWidth={2.5} />
+                              </button>
+                            </div>
+                          </td>
+                        </motion.tr>
+                      ))}
+                    </AnimatePresence>
+                    {expenses.length === 0 && (
+                      <tr>
+                        <td colSpan="6" className="py-10 text-center text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/40 dark:text-white/40">No expenses recorded yet.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
+
+            {/* --- ALUTH: PAGINATION FOOTER --- */}
+            {expenses.length > 0 && (
+              <div className="px-6 sm:px-8 py-5 mt-4 border-t border-[#EBE6E0] dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/50 dark:text-white/50 transition-colors">
+                <p className="text-center sm:text-left">
+                  Showing {indexOfFirstExpense + 1} to {Math.min(indexOfLastExpense, expenses.length)} of {expenses.length} results
+                </p>
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <button 
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="flex-1 sm:flex-none px-5 py-2.5 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-[1.2rem] hover:bg-[#FBF9F6] dark:hover:bg-white/5 transition-colors text-[#0F0E0D] dark:text-white text-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  <button 
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages || totalPages === 0}
+                    className="flex-1 sm:flex-none px-5 py-2.5 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-[1.2rem] hover:bg-[#FBF9F6] dark:hover:bg-white/5 transition-colors text-[#0F0E0D] dark:text-white text-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </motion.div>
 
           {/* ADD EXPENSE FORM (RIGHT COLUMN) */}
