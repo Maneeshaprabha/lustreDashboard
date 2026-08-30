@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Check, Plus, Upload, X, ArrowLeft, Loader2, ImageIcon } from 'lucide-react';
+import { Check, Plus, Upload, X, ArrowLeft, Loader2, ImageIcon, Search, ChevronDown } from 'lucide-react';
 import { productService } from '../services/productService'; 
 import { categoryService } from '../services/categoryService';
 
@@ -17,9 +17,9 @@ export default function AddProduct() {
   const [errorMsg, setErrorMsg] = useState('');
   const [categories, setCategories] = useState([]);
 
-  // --- ALUTH: Multiple Images Handling States ---
-  const [imageFiles, setImageFiles] = useState([]); // Array of actual files to upload
-  const [imagePreviews, setImagePreviews] = useState([]); // Array of local preview URLs
+  // Multiple Images Handling States
+  const [imageFiles, setImageFiles] = useState([]); 
+  const [imagePreviews, setImagePreviews] = useState([]); 
 
   const [formData, setFormData] = useState({
     name: '',
@@ -29,6 +29,11 @@ export default function AddProduct() {
     discount: '',
     discountType: 'None'
   });
+
+  // --- ALUTH: Custom Dropdown States ---
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const [categorySearch, setCategorySearch] = useState('');
+  const categoryDropdownRef = useRef(null);
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -43,13 +48,21 @@ export default function AddProduct() {
       }
     };
     loadCategories();
+
+    // Close dropdown on outside click
+    function handleClickOutside(event) {
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target)) {
+        setIsCategoryOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // --- ALUTH: Select Multiple Images ---
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     if (files.length > 0) {
@@ -60,7 +73,6 @@ export default function AddProduct() {
     }
   };
 
-  // --- ALUTH: Remove an Image ---
   const removeImage = (indexToRemove) => {
     setImageFiles(prev => prev.filter((_, index) => index !== indexToRemove));
     setImagePreviews(prev => prev.filter((_, index) => index !== indexToRemove));
@@ -131,7 +143,6 @@ export default function AddProduct() {
         }
       });
 
-      // --- ALUTH: Upload ALL Images using Promise.all ---
       let uploadedImageUrls = [];
       if (imageFiles.length > 0) {
         uploadedImageUrls = await Promise.all(
@@ -148,12 +159,8 @@ export default function AddProduct() {
         description: formData.description,
         discount: formData.discount,
         discount_type: formData.discountType,
-        
-        // Palaweni image eka main image (img_url) eka widiyata yawanawa.
-        // Array ekak widiyata gallery eka danna oni nam `images: uploadedImageUrls` wage yawanna puluwan.
         img_url: uploadedImageUrls[0] || null, 
-        images: uploadedImageUrls, // Oyaage backend ekata ewanawanm meka use karanna puluwan
-        
+        images: uploadedImageUrls,
         variants: productVariants 
       });
       
@@ -167,6 +174,10 @@ export default function AddProduct() {
 
   const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
   const itemVariants = { hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } } };
+
+  // Filter categories based on search input
+  const filteredCategories = categories.filter(cat => cat.name.toLowerCase().includes(categorySearch.toLowerCase()));
+  const selectedCategoryName = categories.find(c => c.rawId === formData.category)?.name || "Select Category";
 
   return (
     <form onSubmit={handleSubmit}>
@@ -268,9 +279,13 @@ export default function AddProduct() {
             <motion.div variants={itemVariants} className="bg-white dark:bg-[#111111] p-6 sm:p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-[#EBE6E0] dark:border-white/10 transition-colors">
               <h2 className="text-xl sm:text-2xl font-bold text-[#0F0E0D] dark:text-white tracking-tight mb-6 sm:mb-8 transition-colors">Pricing And Stock</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* --- LKR ADDED HERE --- */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 mb-3 transition-colors">Base Pricing</label>
-                  <input type="text" name="price" value={formData.price} onChange={handleChange} placeholder="$47.55" className="w-full bg-[#FBF9F6] dark:bg-white/5 px-5 py-4 rounded-2xl border border-transparent focus:bg-white dark:focus:bg-[#1A1A1A] focus:border-[#0F0E0D]/30 dark:focus:border-white/30 outline-none text-sm font-bold text-[#0F0E0D] dark:text-white transition-colors" />
+                  <div className="relative">
+                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-sm font-bold text-[#0F0E0D]/40 dark:text-white/40">LKR</span>
+                    <input type="text" name="price" value={formData.price} onChange={handleChange} placeholder="0.00" className="w-full bg-[#FBF9F6] dark:bg-white/5 pl-14 pr-5 py-4 rounded-2xl border border-transparent focus:bg-white dark:focus:bg-[#1A1A1A] focus:border-[#0F0E0D]/30 dark:focus:border-white/30 outline-none text-sm font-bold text-[#0F0E0D] dark:text-white transition-colors" />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 mb-3 transition-colors">Total Stock</label>
@@ -354,21 +369,68 @@ export default function AddProduct() {
               )}
             </motion.div>
 
-            <motion.div variants={itemVariants} className="bg-white dark:bg-[#111111] p-6 sm:p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-[#EBE6E0] dark:border-white/10 transition-colors">
+            <motion.div variants={itemVariants} className="bg-white dark:bg-[#111111] p-6 sm:p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-[#EBE6E0] dark:border-white/10 transition-colors relative">
               <h2 className="text-xl sm:text-2xl font-bold text-[#0F0E0D] dark:text-white tracking-tight mb-6 sm:mb-8 transition-colors">Category</h2>
               <div className="space-y-6">
-                <div>
+                
+                {/* --- ALUTH: CUSTOM SEARCHABLE DROPDOWN --- */}
+                <div className="relative" ref={categoryDropdownRef}>
                   <label className="block text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 mb-3 transition-colors">Product Category</label>
-                  <select name="category" value={formData.category} onChange={handleChange} className="w-full bg-[#FBF9F6] dark:bg-white/5 text-[#0F0E0D] dark:text-white px-5 py-4 rounded-2xl border border-transparent focus:border-[#0F0E0D]/30 dark:focus:border-white/30 outline-none text-sm font-bold appearance-none cursor-pointer transition-colors">
-                    {categories.length === 0 ? (
-                      <option value="" disabled className="dark:bg-[#111111]">Loading categories...</option>
-                    ) : (
-                      categories.map(cat => (
-                        <option key={cat.rawId} value={cat.rawId} className="dark:bg-[#111111]">{cat.name}</option>
-                      ))
+                  
+                  <div 
+                    onClick={() => setIsCategoryOpen(!isCategoryOpen)}
+                    className="w-full bg-[#FBF9F6] dark:bg-white/5 px-5 py-4 rounded-2xl border border-transparent hover:border-[#0F0E0D]/20 dark:hover:border-white/20 flex items-center justify-between cursor-pointer transition-all"
+                  >
+                    <span className="text-sm font-bold text-[#0F0E0D] dark:text-white">{selectedCategoryName}</span>
+                    <ChevronDown size={18} className={`text-[#0F0E0D]/50 dark:text-white/50 transition-transform ${isCategoryOpen ? 'rotate-180' : ''}`} />
+                  </div>
+
+                  <AnimatePresence>
+                    {isCategoryOpen && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute z-50 top-[100%] left-0 right-0 mt-2 bg-white dark:bg-[#1A1A1A] border border-[#EBE6E0] dark:border-white/10 rounded-2xl shadow-xl overflow-hidden flex flex-col"
+                      >
+                        {/* Search Input Inside Dropdown */}
+                        <div className="p-3 border-b border-[#EBE6E0] dark:border-white/10 relative">
+                          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-[#0F0E0D]/40 dark:text-white/40" size={14} strokeWidth={2.5} />
+                          <input 
+                            type="text" 
+                            placeholder="Search category..." 
+                            value={categorySearch}
+                            onChange={(e) => setCategorySearch(e.target.value)}
+                            className="w-full bg-[#FBF9F6] dark:bg-white/5 pl-10 pr-4 py-2.5 rounded-xl border border-transparent outline-none text-xs font-bold text-[#0F0E0D] dark:text-white placeholder:text-[#0F0E0D]/40 dark:placeholder:text-white/40 transition-colors"
+                          />
+                        </div>
+
+                        {/* Dropdown Options */}
+                        <div className="max-h-60 overflow-y-auto p-2 scrollbar-hide">
+                          {filteredCategories.length === 0 ? (
+                            <p className="p-4 text-xs font-bold text-center text-[#0F0E0D]/40 dark:text-white/40">No categories found</p>
+                          ) : (
+                            filteredCategories.map(cat => (
+                              <button
+                                key={cat.rawId}
+                                type="button"
+                                onClick={() => {
+                                  setFormData({ ...formData, category: cat.rawId });
+                                  setIsCategoryOpen(false);
+                                  setCategorySearch(''); // Reset search after select
+                                }}
+                                className={`w-full text-left px-4 py-3 text-sm font-bold rounded-xl transition-colors ${formData.category === cat.rawId ? 'bg-[#0F0E0D] text-white dark:bg-white dark:text-[#0F0E0D]' : 'text-[#0F0E0D] dark:text-white hover:bg-[#FBF9F6] dark:hover:bg-white/10'}`}
+                              >
+                                {cat.name}
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </motion.div>
                     )}
-                  </select>
+                  </AnimatePresence>
                 </div>
+
                 <motion.button type="button" onClick={() => navigate('/categories')} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full py-4 bg-[#FBF9F6] dark:bg-white/5 border border-[#EBE6E0] dark:border-white/10 text-[#0F0E0D] dark:text-white font-extrabold uppercase tracking-widest text-[10px] rounded-2xl hover:bg-[#EBE6E0]/50 dark:hover:bg-white/10 transition-colors">
                   Manage Categories
                 </motion.button>
