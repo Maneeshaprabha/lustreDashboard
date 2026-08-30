@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import { 
-  Store, User, Bell, Lock, Save, Upload, Check, Globe, Mail, Phone, Palette, Image as ImageIcon, CheckCircle2
+  Store, User, Bell, Lock, Save, Upload, Check, Globe, Mail, Phone, Palette, Image as ImageIcon, CheckCircle2, AlertCircle,
+  Loader2
 } from 'lucide-react';
 
 export default function Settings() {
@@ -10,13 +11,66 @@ export default function Settings() {
 
   // Read target tab from router state or default to 'branding'
   const [activeTab, setActiveTab] = useState(location.state?.targetTab || 'branding'); 
+  const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+
+  // Custom Notification State
+  const [notification, setNotification] = useState({ show: false, message: '', type: 'error' });
+
+  // --- ALUTH: Dynamic User State ---
+  const [userData, setUserData] = useState({
+    firstName: "Admin",
+    lastName: "User",
+    email: "admin@lustre.com",
+    avatar: ""
+  });
+
+  const [passwords, setPasswords] = useState({
+    current: '',
+    newPass: '',
+    confirm: ''
+  });
 
   useEffect(() => {
     if (location.state?.targetTab) {
       setActiveTab(location.state.targetTab);
     }
+
+    // Load Real User Data from localStorage
+    const storedUserStr = localStorage.getItem('user');
+    if (storedUserStr) {
+      try {
+        const storedUser = JSON.parse(storedUserStr);
+        let fName = "Admin";
+        let lName = "User";
+
+        // Handle full names or separate names
+        if (storedUser.name || storedUser.full_name) {
+          const parts = (storedUser.name || storedUser.full_name).split(' ');
+          fName = parts[0] || '';
+          lName = parts.slice(1).join(' ') || '';
+        } else if (storedUser.firstName) {
+          fName = storedUser.firstName;
+          lName = storedUser.lastName || '';
+        }
+
+        const email = storedUser.email || "admin@lustre.com";
+        const avatar = storedUser.avatar || storedUser.profile_pic || `https://ui-avatars.com/api/?name=${encodeURIComponent(fName + ' ' + lName)}&background=0F0E0D&color=fff&size=200`;
+
+        setUserData({ firstName: fName, lastName: lName, email, avatar });
+      } catch (e) {
+        console.error("Failed to parse user data", e);
+      }
+    } else {
+      // Default fallback avatar
+      setUserData(prev => ({ ...prev, avatar: `https://ui-avatars.com/api/?name=Admin+User&background=0F0E0D&color=fff&size=200` }));
+    }
   }, [location.state]);
+
+  const showNotification = (message, type = 'error') => {
+    setNotification({ show: true, message, type });
+    setTimeout(() => setNotification(prev => ({ ...prev, show: false })), 3500);
+  };
 
   // Toggle states for Notifications tab
   const [notifOrder, setNotifOrder] = useState(true);
@@ -28,20 +82,70 @@ export default function Settings() {
   const [accentColor, setAccentColor] = useState('#C4BEB6');
   const [bgColor, setBgColor] = useState('#E9E3DB');
 
+  const handleUserChange = (e) => {
+    setUserData({ ...userData, [e.target.name]: e.target.value });
+  };
+
+  const handlePasswordChange = (e) => {
+    setPasswords({ ...passwords, [e.target.name]: e.target.value });
+  };
+
   const handleSave = () => {
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 2500);
+    // Basic Validations
+    if (activeTab === 'account' && (!userData.firstName || !userData.email)) {
+      return showNotification("First name and Email are required.", "error");
+    }
+
+    if (activeTab === 'security') {
+      if (passwords.newPass && passwords.newPass !== passwords.confirm) {
+        return showNotification("New passwords do not match.", "error");
+      }
+      if (passwords.newPass && !passwords.current) {
+        return showNotification("Please enter current password to verify.", "error");
+      }
+    }
+
+    setIsSaving(true);
+
+    // Simulate API Save
+    setTimeout(() => {
+      // If on account tab, update LocalStorage so Navbar updates on next load/reload
+      if (activeTab === 'account') {
+        const storedUserStr = localStorage.getItem('user');
+        let updatedUser = { 
+          name: `${userData.firstName} ${userData.lastName}`.trim(),
+          email: userData.email,
+          role: 'Manager' // Defaulting for visual
+        };
+        
+        if (storedUserStr) {
+          try {
+            updatedUser = { ...JSON.parse(storedUserStr), ...updatedUser };
+          } catch(e) {}
+        }
+        
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        // Update avatar instantly for preview
+        setUserData(prev => ({ 
+          ...prev, 
+          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(updatedUser.name)}&background=0F0E0D&color=fff&size=200` 
+        }));
+      }
+
+      if (activeTab === 'security' && passwords.newPass) {
+        setPasswords({ current: '', newPass: '', confirm: '' }); // Clear passwords after save
+      }
+
+      setIsSaving(false);
+      setIsSaved(true);
+      showNotification("Settings saved successfully!", "success");
+      setTimeout(() => setIsSaved(false), 2500);
+    }, 1000);
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.08 } }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 15 },
-    visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
-  };
+  const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.08 } } };
+  const itemVariants = { hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } } };
 
   const tabs = [
     { id: 'branding', label: 'Branding & Theme', icon: <Palette size={18} /> },
@@ -56,9 +160,32 @@ export default function Settings() {
       variants={containerVariants} 
       initial="hidden" 
       animate="visible" 
-      className="p-4 sm:p-6 md:p-10 max-w-[1200px] w-full mx-auto space-y-6 sm:space-y-8 pb-32 sm:pb-24 bg-[#FBF9F6] dark:bg-[#0A0A0A] min-h-screen transition-colors duration-300 font-sans"
+      className="p-4 sm:p-6 md:p-10 max-w-[1200px] w-full mx-auto space-y-6 sm:space-y-8 pb-32 sm:pb-24 bg-[#FBF9F6] dark:bg-[#0A0A0A] min-h-screen transition-colors duration-300 font-sans relative"
     >
       
+      {/* CUSTOM NOTIFICATION TOAST */}
+      <AnimatePresence>
+        {notification.show && (
+          <motion.div 
+            initial={{ opacity: 0, y: -40, scale: 0.95, x: '-50%' }} 
+            animate={{ opacity: 1, y: 0, scale: 1, x: '-50%' }} 
+            exit={{ opacity: 0, y: -40, scale: 0.95, x: '-50%' }}
+            className={`fixed top-8 left-1/2 z-[100] flex items-center gap-3 px-6 py-4 rounded-full shadow-2xl backdrop-blur-md border ${
+              notification.type === 'error' ? 'bg-white/90 dark:bg-[#111111]/90 border-red-200 dark:border-red-500/20' : 'bg-white/90 dark:bg-[#111111]/90 border-green-200 dark:border-green-500/20'
+            }`}
+          >
+            {notification.type === 'error' ? (
+              <div className="w-8 h-8 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center text-red-500 shrink-0"><AlertCircle size={16} strokeWidth={2.5} /></div>
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-green-50 dark:bg-green-500/10 flex items-center justify-center text-green-500 shrink-0"><Check size={16} strokeWidth={2.5} /></div>
+            )}
+            <span className={`text-sm font-bold tracking-wide ${notification.type === 'error' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
+              {notification.message}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Top Header */}
       <motion.div variants={itemVariants} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
         <div>
@@ -73,12 +200,13 @@ export default function Settings() {
         {/* Save Button (Desktop / Tablet) */}
         <motion.button 
           onClick={handleSave}
+          disabled={isSaving}
           whileHover={{ scale: 1.02 }} 
           whileTap={{ scale: 0.98 }} 
-          className="hidden sm:flex px-6 py-3.5 bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D] rounded-full text-xs font-extrabold uppercase tracking-widest items-center gap-2 shadow-[0_10px_20px_-10px_rgba(15,14,13,0.4)] dark:shadow-[0_10px_20px_-10px_rgba(255,255,255,0.4)] hover:bg-[#0F0E0D]/90 dark:hover:bg-white/90 transition-all"
+          className="hidden sm:flex px-6 py-3.5 bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D] rounded-full text-xs font-extrabold uppercase tracking-widest items-center gap-2 shadow-[0_10px_20px_-10px_rgba(15,14,13,0.4)] dark:shadow-[0_10px_20px_-10px_rgba(255,255,255,0.4)] hover:bg-[#0F0E0D]/90 dark:hover:bg-white/90 transition-all disabled:opacity-70"
         >
-          {isSaved ? <CheckCircle2 size={16} className="text-green-400 dark:text-green-600" /> : <Save size={16} strokeWidth={2.5} />}
-          <span>{isSaved ? "Saved!" : "Save Changes"}</span>
+          {isSaving ? <Loader2 size={16} className="animate-spin" /> : (isSaved ? <CheckCircle2 size={16} className="text-green-400 dark:text-green-600" /> : <Save size={16} strokeWidth={2.5} />)}
+          <span>{isSaving ? "Saving..." : (isSaved ? "Saved!" : "Save Changes")}</span>
         </motion.button>
       </motion.div>
 
@@ -317,7 +445,7 @@ export default function Settings() {
               </motion.div>
             )}
 
-            {/* ACCOUNT PROFILE TAB */}
+            {/* ACCOUNT PROFILE TAB (FULLY INTEGRATED) */}
             {activeTab === 'account' && (
               <motion.div 
                 key="account"
@@ -334,7 +462,7 @@ export default function Settings() {
 
                 <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 sm:gap-6 bg-[#FBF9F6] dark:bg-white/5 p-4 sm:p-6 rounded-2xl border border-[#EBE6E0] dark:border-white/10">
                   <div className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-full overflow-hidden border-4 border-white dark:border-[#111111] shadow-md relative group cursor-pointer transition-colors">
-                    <img src="https://i.pravatar.cc/100?img=32" alt="Profile" className="w-full h-full object-cover" />
+                    <img src={userData.avatar} alt="Profile" className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <Upload className="text-white" size={20} />
                     </div>
@@ -343,22 +471,22 @@ export default function Settings() {
                     <button className="px-5 py-2.5 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/20 rounded-full text-[10px] font-extrabold uppercase tracking-widest text-[#0F0E0D] dark:text-white hover:bg-[#FBF9F6] dark:hover:bg-white/5 transition-colors shadow-sm mb-2">
                       Change Avatar
                     </button>
-                    <p className="text-[11px] text-[#0F0E0D]/50 dark:text-white/50 font-medium transition-colors">JPG, GIF or PNG. Maximum file size 2MB.</p>
+                    <p className="text-[11px] text-[#0F0E0D]/50 dark:text-white/50 font-medium transition-colors">Avatar auto-generated if none provided.</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 pt-2">
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 mb-2 transition-colors">First Name</label>
-                    <input type="text" defaultValue="Kamisato" className="w-full bg-[#FBF9F6] dark:bg-white/5 px-4 sm:px-5 py-3.5 sm:py-4 rounded-2xl border border-transparent focus:bg-white dark:focus:bg-[#1A1A1A] focus:border-[#0F0E0D]/30 dark:focus:border-white/30 outline-none transition-all text-sm font-bold text-[#0F0E0D] dark:text-white" />
+                    <input type="text" name="firstName" value={userData.firstName} onChange={handleUserChange} className="w-full bg-[#FBF9F6] dark:bg-white/5 px-4 sm:px-5 py-3.5 sm:py-4 rounded-2xl border border-transparent focus:bg-white dark:focus:bg-[#1A1A1A] focus:border-[#0F0E0D]/30 dark:focus:border-white/30 outline-none transition-all text-sm font-bold text-[#0F0E0D] dark:text-white" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 mb-2 transition-colors">Last Name</label>
-                    <input type="text" defaultValue="Aya" className="w-full bg-[#FBF9F6] dark:bg-white/5 px-4 sm:px-5 py-3.5 sm:py-4 rounded-2xl border border-transparent focus:bg-white dark:focus:bg-[#1A1A1A] focus:border-[#0F0E0D]/30 dark:focus:border-white/30 outline-none transition-all text-sm font-bold text-[#0F0E0D] dark:text-white" />
+                    <input type="text" name="lastName" value={userData.lastName} onChange={handleUserChange} className="w-full bg-[#FBF9F6] dark:bg-white/5 px-4 sm:px-5 py-3.5 sm:py-4 rounded-2xl border border-transparent focus:bg-white dark:focus:bg-[#1A1A1A] focus:border-[#0F0E0D]/30 dark:focus:border-white/30 outline-none transition-all text-sm font-bold text-[#0F0E0D] dark:text-white" />
                   </div>
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 mb-2 transition-colors">Email Address</label>
-                    <input type="email" defaultValue="aya@lustre.com" className="w-full bg-[#FBF9F6] dark:bg-white/5 px-4 sm:px-5 py-3.5 sm:py-4 rounded-2xl border border-transparent focus:bg-white dark:focus:bg-[#1A1A1A] focus:border-[#0F0E0D]/30 dark:focus:border-white/30 outline-none transition-all text-sm font-bold text-[#0F0E0D] dark:text-white" />
+                    <input type="email" name="email" value={userData.email} onChange={handleUserChange} className="w-full bg-[#FBF9F6] dark:bg-white/5 px-4 sm:px-5 py-3.5 sm:py-4 rounded-2xl border border-transparent focus:bg-white dark:focus:bg-[#1A1A1A] focus:border-[#0F0E0D]/30 dark:focus:border-white/30 outline-none transition-all text-sm font-bold text-[#0F0E0D] dark:text-white" />
                   </div>
                 </div>
               </motion.div>
@@ -454,15 +582,15 @@ export default function Settings() {
                 <div className="space-y-5 sm:space-y-6">
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 mb-2 transition-colors">Current Password</label>
-                    <input type="password" placeholder="••••••••" className="w-full bg-[#FBF9F6] dark:bg-white/5 px-4 sm:px-5 py-3.5 sm:py-4 rounded-2xl border border-transparent focus:bg-white dark:focus:bg-[#1A1A1A] focus:border-[#0F0E0D]/30 dark:focus:border-white/30 outline-none transition-all text-sm font-bold text-[#0F0E0D] dark:text-white placeholder:text-[#0F0E0D]/30 dark:placeholder:text-white/30" />
+                    <input type="password" name="current" value={passwords.current} onChange={handlePasswordChange} placeholder="••••••••" className="w-full bg-[#FBF9F6] dark:bg-white/5 px-4 sm:px-5 py-3.5 sm:py-4 rounded-2xl border border-transparent focus:bg-white dark:focus:bg-[#1A1A1A] focus:border-[#0F0E0D]/30 dark:focus:border-white/30 outline-none transition-all text-sm font-bold text-[#0F0E0D] dark:text-white placeholder:text-[#0F0E0D]/30 dark:placeholder:text-white/30" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 mb-2 transition-colors">New Password</label>
-                    <input type="password" placeholder="Leave blank to keep current" className="w-full bg-[#FBF9F6] dark:bg-white/5 px-4 sm:px-5 py-3.5 sm:py-4 rounded-2xl border border-transparent focus:bg-white dark:focus:bg-[#1A1A1A] focus:border-[#0F0E0D]/30 dark:focus:border-white/30 outline-none transition-all text-sm font-bold text-[#0F0E0D] dark:text-white placeholder:text-[#0F0E0D]/30 dark:placeholder:text-white/30" />
+                    <input type="password" name="newPass" value={passwords.newPass} onChange={handlePasswordChange} placeholder="Leave blank to keep current" className="w-full bg-[#FBF9F6] dark:bg-white/5 px-4 sm:px-5 py-3.5 sm:py-4 rounded-2xl border border-transparent focus:bg-white dark:focus:bg-[#1A1A1A] focus:border-[#0F0E0D]/30 dark:focus:border-white/30 outline-none transition-all text-sm font-bold text-[#0F0E0D] dark:text-white placeholder:text-[#0F0E0D]/30 dark:placeholder:text-white/30" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 mb-2 transition-colors">Confirm New Password</label>
-                    <input type="password" placeholder="" className="w-full bg-[#FBF9F6] dark:bg-white/5 px-4 sm:px-5 py-3.5 sm:py-4 rounded-2xl border border-transparent focus:bg-white dark:focus:bg-[#1A1A1A] focus:border-[#0F0E0D]/30 dark:focus:border-white/30 outline-none transition-all text-sm font-bold text-[#0F0E0D] dark:text-white placeholder:text-[#0F0E0D]/30 dark:placeholder:text-white/30" />
+                    <input type="password" name="confirm" value={passwords.confirm} onChange={handlePasswordChange} placeholder="" className="w-full bg-[#FBF9F6] dark:bg-white/5 px-4 sm:px-5 py-3.5 sm:py-4 rounded-2xl border border-transparent focus:bg-white dark:focus:bg-[#1A1A1A] focus:border-[#0F0E0D]/30 dark:focus:border-white/30 outline-none transition-all text-sm font-bold text-[#0F0E0D] dark:text-white placeholder:text-[#0F0E0D]/30 dark:placeholder:text-white/30" />
                   </div>
                 </div>
               </motion.div>
@@ -476,11 +604,12 @@ export default function Settings() {
       <div className="fixed sm:hidden bottom-0 left-0 right-0 p-4 bg-white/90 dark:bg-[#0A0A0A]/90 backdrop-blur-md border-t border-[#EBE6E0] dark:border-white/10 z-40">
         <motion.button 
           onClick={handleSave}
+          disabled={isSaving}
           whileTap={{ scale: 0.97 }} 
-          className="w-full py-3.5 bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D] rounded-2xl text-xs font-extrabold uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg"
+          className="w-full py-3.5 bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D] rounded-2xl text-xs font-extrabold uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg disabled:opacity-70"
         >
-          {isSaved ? <CheckCircle2 size={16} className="text-green-400 dark:text-green-600" /> : <Save size={16} strokeWidth={2.5} />}
-          <span>{isSaved ? "Settings Saved!" : "Save Changes"}</span>
+          {isSaving ? <Loader2 size={16} className="animate-spin" /> : (isSaved ? <CheckCircle2 size={16} className="text-green-400 dark:text-green-600" /> : <Save size={16} strokeWidth={2.5} />)}
+          <span>{isSaving ? "Saving..." : (isSaved ? "Saved!" : "Save Changes")}</span>
         </motion.button>
       </div>
 
