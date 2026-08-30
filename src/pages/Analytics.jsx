@@ -213,7 +213,7 @@ export default function Analytics() {
       
       // Metrics
       csvContent += "METRICS SUMMARY\n";
-      csvContent += `Total Revenue,$${metrics.revenue.toFixed(2)}\n`;
+      csvContent += `Total Revenue,LKR ${metrics.revenue.toFixed(2)}\n`;
       csvContent += `Store Visitors,${metrics.visitors}\n`;
       csvContent += `Conversion Rate,${metrics.conversion}%\n`;
       csvContent += `Total Clicks,${metrics.clicks}\n\n`;
@@ -363,7 +363,7 @@ export default function Analytics() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 relative z-10">
           <StatCard 
             title="Total Revenue" 
-            value={`$${metrics.revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
+            value={`LKR  ${metrics.revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
             trend="Real-time" 
             isPositive={true} 
             icon={<DollarSign size={24} />} 
