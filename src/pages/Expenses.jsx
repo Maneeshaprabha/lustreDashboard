@@ -1,75 +1,135 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Receipt, TrendingDown, Plus, Trash2, Tag, Box, X
+  Receipt, TrendingDown, Plus, Trash2, Tag, Box, X, Pencil, Loader2, Save
 } from 'lucide-react';
+import { expenseService } from '../services/expenseService';
 
 export default function Expenses() {
-  // Expense Data State
-  const [expenses, setExpenses] = useState([
-    { id: '#EXP-001', item: 'Matte Black Courier Bags (500pcs)', category: 'Packaging', date: 'Aug 10, 2026', amount: 125.00 },
-    { id: '#EXP-002', item: 'Premium Business Cards', category: 'Branding', date: 'Aug 09, 2026', amount: 85.50 },
-    { id: '#EXP-003', item: 'Custom Price Tags & String', category: 'Branding', date: 'Aug 05, 2026', amount: 45.00 },
-    { id: '#EXP-004', item: 'Thermal Printer Labels', category: 'Office Supplies', date: 'Aug 02, 2026', amount: 22.00 },
-    { id: '#EXP-005', item: 'Branded Tissue Paper', category: 'Packaging', date: 'Jul 28, 2026', amount: 110.00 },
-  ]);
+  const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Categories State (Dynamic)
-  const [categories, setCategories] = useState(['Packaging', 'Branding', 'Office Supplies', 'Logistics', 'Miscellaneous']);
+  // Edit Mode States
+  const [isEditing, setIsEditing] = useState(false);
+  const [editId, setEditId] = useState(null);
+
+  // Categories State
+  const defaultCategories = ['Packaging', 'Branding', 'Office Supplies', 'Logistics', 'Miscellaneous'];
+  const [categories, setCategories] = useState(defaultCategories);
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [customCategory, setCustomCategory] = useState('');
 
   // Form State
   const [newItem, setNewItem] = useState('');
-  const [newCategory, setNewCategory] = useState(categories[0]);
+  const [newCategory, setNewCategory] = useState(defaultCategories[0]);
   const [newAmount, setNewAmount] = useState('');
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+  // Fetch Data from Backend
+  useEffect(() => {
+    fetchExpenses();
+  }, []);
+
+  const fetchExpenses = async () => {
+    try {
+      setLoading(true);
+      const data = await expenseService.getAll();
+      setExpenses(data);
+      
+      // Update categories if there are custom ones in DB
+      const dbCategories = data.map(exp => exp.category);
+      const uniqueCategories = [...new Set([...defaultCategories, ...dbCategories])];
+      setCategories(uniqueCategories);
+    } catch (error) {
+      console.error("Error fetching expenses", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
-  };
-
-  // Handle adding a new main expense
-  const handleAddExpense = (e) => {
+  // Form Submit (Create or Update)
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!newItem || !newAmount) return;
-    
-    const expense = {
-      id: `#EXP-${Math.floor(100 + Math.random() * 900)}`,
-      item: newItem,
-      category: newCategory,
-      date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
-      amount: parseFloat(newAmount)
-    };
 
-    setExpenses([expense, ...expenses]);
-    setNewItem('');
-    setNewAmount('');
+    try {
+      setIsSaving(true);
+      const payload = {
+        item: newItem,
+        category: newCategory,
+        amount: parseFloat(newAmount)
+      };
+
+      if (isEditing && editId) {
+        // UPDATE EXPENSE
+        const updatedExpense = await expenseService.update(editId, payload);
+        setExpenses(expenses.map(exp => exp.id === editId ? updatedExpense : exp));
+        setIsEditing(false);
+        setEditId(null);
+      } else {
+        // CREATE NEW EXPENSE
+        const createdExpense = await expenseService.create(payload);
+        setExpenses([createdExpense, ...expenses]);
+      }
+
+      // Reset form
+      setNewItem('');
+      setNewAmount('');
+      setNewCategory(categories[0]);
+    } catch (error) {
+      console.error("Error saving expense", error);
+      alert("Failed to save expense");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  // Handle adding a brand new custom category
+  // Handle Edit Click
+  const handleEditClick = (exp) => {
+    setIsEditing(true);
+    setEditId(exp.id);
+    setNewItem(exp.item);
+    setNewCategory(exp.category);
+    setNewAmount(exp.amount.toString());
+    
+    // Scroll to form smoothly
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Cancel Edit
+  const cancelEdit = () => {
+    setIsEditing(false);
+    setEditId(null);
+    setNewItem('');
+    setNewAmount('');
+    setNewCategory(categories[0]);
+  };
+
+  // Delete Expense
+  const handleDelete = async (idToRemove) => {
+    if(!window.confirm("Are you sure you want to delete this expense?")) return;
+    try {
+      await expenseService.delete(idToRemove);
+      setExpenses(expenses.filter(exp => exp.id !== idToRemove));
+    } catch (error) {
+      console.error("Error deleting expense", error);
+      alert("Failed to delete expense");
+    }
+  };
+
+  // Handle Custom Category
   const handleAddCustomCategory = () => {
     if (customCategory.trim() && !categories.includes(customCategory.trim())) {
       const formattedCategory = customCategory.trim();
       setCategories([...categories, formattedCategory]);
-      setNewCategory(formattedCategory); // Automatically select it
+      setNewCategory(formattedCategory);
     }
     setCustomCategory('');
     setShowAddCategory(false);
   };
 
-  const handleDelete = (idToRemove) => {
-    setExpenses(expenses.filter(exp => exp.id !== idToRemove));
-  };
+  const totalSpent = expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
 
-  const totalSpent = expenses.reduce((sum, exp) => sum + exp.amount, 0);
-
-  // Dynamic badge styling based on category
   const getCategoryStyle = (category) => {
     switch(category) {
       case 'Packaging': return 'bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D] border border-transparent';
@@ -78,6 +138,23 @@ export default function Expenses() {
       default: return 'bg-[#EBE6E0]/50 dark:bg-white/5 border border-transparent text-[#0F0E0D] dark:text-white';
     }
   };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  };
+
+  const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
+  const itemVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } } };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#FBF9F6] dark:bg-[#0A0A0A] text-[#0F0E0D]/40 dark:text-white/40">
+        <Loader2 className="animate-spin mb-4" size={32} />
+        <p className="text-xs font-bold uppercase tracking-widest">Loading Expenses...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full bg-[#FBF9F6] dark:bg-[#0A0A0A] min-h-screen transition-colors duration-300">
@@ -103,14 +180,14 @@ export default function Expenses() {
           />
           <StatCard 
             title="Packaging Costs" 
-            value={`$${expenses.filter(e => e.category === 'Packaging').reduce((s, e) => s + e.amount, 0).toFixed(2)}`} 
+            value={`$${expenses.filter(e => e.category === 'Packaging').reduce((s, e) => s + Number(e.amount), 0).toFixed(2)}`} 
             trend="Courier Bags & Boxes" 
             icon={<Box size={24} />} 
             variants={itemVariants} 
           />
           <StatCard 
             title="Branding & Marketing" 
-            value={`$${expenses.filter(e => e.category === 'Branding').reduce((s, e) => s + e.amount, 0).toFixed(2)}`} 
+            value={`$${expenses.filter(e => e.category === 'Branding').reduce((s, e) => s + Number(e.amount), 0).toFixed(2)}`} 
             trend="Tags & Business Cards" 
             icon={<Tag size={24} />} 
             variants={itemVariants} 
@@ -134,7 +211,7 @@ export default function Expenses() {
                     <th className="pb-5 font-bold">Category</th>
                     <th className="pb-5 font-bold">Date</th>
                     <th className="pb-5 font-bold text-right">Amount</th>
-                    <th className="pb-5 font-bold text-center">Action</th>
+                    <th className="pb-5 font-bold text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="text-sm">
@@ -147,22 +224,32 @@ export default function Expenses() {
                         exit={{ opacity: 0, scale: 0.95 }}
                         className="border-b border-[#EBE6E0]/60 dark:border-white/5 hover:bg-[#FBF9F6]/50 dark:hover:bg-white/5 transition-colors group"
                       >
-                        <td className="py-4 sm:py-5 font-mono font-bold text-[#0F0E0D]/60 dark:text-white/60 text-xs tracking-wider transition-colors">{exp.id}</td>
+                        <td className="py-4 sm:py-5 font-mono font-bold text-[#0F0E0D]/60 dark:text-white/60 text-xs tracking-wider transition-colors">{exp.custom_id}</td>
                         <td className="py-4 sm:py-5 font-extrabold text-[#0F0E0D] dark:text-white text-sm tracking-tight transition-colors">{exp.item}</td>
                         <td className="py-4 sm:py-5">
                           <span className={`px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.2em] rounded-full inline-flex items-center gap-1.5 w-fit transition-colors ${getCategoryStyle(exp.category)}`}>
                             {exp.category}
                           </span>
                         </td>
-                        <td className="py-4 sm:py-5 font-medium text-[#0F0E0D]/60 dark:text-white/60 text-xs transition-colors">{exp.date}</td>
-                        <td className="py-4 sm:py-5 font-extrabold text-[#0F0E0D] dark:text-white text-right text-base transition-colors">${exp.amount.toFixed(2)}</td>
-                        <td className="py-4 sm:py-5 text-center">
-                          <button 
-                            onClick={() => handleDelete(exp.id)}
-                            className="p-2 text-[#0F0E0D]/30 dark:text-white/30 hover:text-[#6A3131] dark:hover:text-red-400 transition-colors rounded-xl hover:bg-[#FFF4F4] dark:hover:bg-red-500/20 inline-flex opacity-100 xl:opacity-0 xl:group-hover:opacity-100"
-                          >
-                            <Trash2 size={16} strokeWidth={2.5} />
-                          </button>
+                        <td className="py-4 sm:py-5 font-medium text-[#0F0E0D]/60 dark:text-white/60 text-xs transition-colors">{formatDate(exp.created_at)}</td>
+                        <td className="py-4 sm:py-5 font-extrabold text-[#0F0E0D] dark:text-white text-right text-base transition-colors">${Number(exp.amount).toFixed(2)}</td>
+                        <td className="py-4 sm:py-5 text-right">
+                          <div className="flex justify-end gap-1 opacity-100 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
+                            <button 
+                              onClick={() => handleEditClick(exp)}
+                              className="p-2 text-[#0F0E0D]/50 dark:text-white/50 hover:text-[#0F0E0D] dark:hover:text-white transition-colors rounded-xl hover:bg-[#EBE6E0] dark:hover:bg-white/10"
+                              title="Edit Expense"
+                            >
+                              <Pencil size={16} strokeWidth={2.5} />
+                            </button>
+                            <button 
+                              onClick={() => handleDelete(exp.id)}
+                              className="p-2 text-[#0F0E0D]/30 dark:text-white/30 hover:text-[#6A3131] dark:hover:text-red-400 transition-colors rounded-xl hover:bg-[#FFF4F4] dark:hover:bg-red-500/20"
+                              title="Delete Expense"
+                            >
+                              <Trash2 size={16} strokeWidth={2.5} />
+                            </button>
+                          </div>
                         </td>
                       </motion.tr>
                     ))}
@@ -177,15 +264,26 @@ export default function Expenses() {
             </div>
           </motion.div>
 
-          {/* ADD EXPENSE FORM (RIGHT COLUMN) */}
-          <motion.div variants={itemVariants} className="bg-white dark:bg-[#111111] p-6 sm:p-8 md:p-10 rounded-[2.5rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.03)] border border-[#EBE6E0] dark:border-white/10 flex flex-col h-fit transition-colors">
+          {/* ADD/EDIT EXPENSE FORM (RIGHT COLUMN) */}
+          <motion.div variants={itemVariants} className={`p-6 sm:p-8 md:p-10 rounded-[2.5rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.03)] border transition-colors flex flex-col h-fit ${isEditing ? 'bg-[#F4F8F9] dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30' : 'bg-white dark:bg-[#111111] border-[#EBE6E0] dark:border-white/10'}`}>
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-[#0F0E0D] dark:text-white mb-2 transition-colors">Record New Bill</h2>
-              <p className="text-[10px] text-[#0F0E0D]/50 dark:text-white/50 font-bold uppercase tracking-[0.25em] mb-6 sm:mb-8 transition-colors">Log your operational costs</p>
+              <div className="flex justify-between items-center mb-2">
+                <h2 className={`text-xl sm:text-2xl font-bold tracking-tight transition-colors ${isEditing ? 'text-[#2E3A4A] dark:text-blue-400' : 'text-[#0F0E0D] dark:text-white'}`}>
+                  {isEditing ? 'Edit Bill' : 'Record New Bill'}
+                </h2>
+                {isEditing && (
+                  <button onClick={cancelEdit} className="text-[#0F0E0D]/40 hover:text-red-500 transition-colors bg-white dark:bg-[#1A1A1A] p-1.5 rounded-full shadow-sm">
+                    <X size={16} strokeWidth={3} />
+                  </button>
+                )}
+              </div>
+              <p className={`text-[10px] font-bold uppercase tracking-[0.25em] mb-6 sm:mb-8 transition-colors ${isEditing ? 'text-[#2E3A4A]/60 dark:text-blue-400/60' : 'text-[#0F0E0D]/50 dark:text-white/50'}`}>
+                {isEditing ? 'Update operational costs' : 'Log your operational costs'}
+              </p>
               
-              <form onSubmit={handleAddExpense} className="space-y-5 sm:space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 mb-3 transition-colors">Item Description</label>
+                  <label className={`block text-xs font-bold uppercase tracking-widest mb-3 transition-colors ${isEditing ? 'text-[#2E3A4A]/80 dark:text-blue-400/80' : 'text-[#0F0E0D]/60 dark:text-white/60'}`}>Item Description</label>
                   <input 
                     type="text" 
                     required
@@ -197,21 +295,19 @@ export default function Expenses() {
                 </div>
 
                 <div>
-                  {/* Dynamic Category Header */}
                   <div className="flex justify-between items-center mb-3">
-                    <label className="block text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 transition-colors">Category</label>
+                    <label className={`block text-xs font-bold uppercase tracking-widest transition-colors ${isEditing ? 'text-[#2E3A4A]/80 dark:text-blue-400/80' : 'text-[#0F0E0D]/60 dark:text-white/60'}`}>Category</label>
                     {!showAddCategory && (
                       <button 
                         type="button" 
                         onClick={() => setShowAddCategory(true)}
-                        className="text-[9px] font-bold uppercase tracking-widest text-[#0F0E0D] dark:text-white hover:opacity-70 transition-opacity"
+                        className={`text-[9px] font-bold uppercase tracking-widest hover:opacity-70 transition-opacity ${isEditing ? 'text-[#2E3A4A] dark:text-blue-400' : 'text-[#0F0E0D] dark:text-white'}`}
                       >
                         + Add New
                       </button>
                     )}
                   </div>
 
-                  {/* Toggle between Select Dropdown and Custom Input */}
                   {showAddCategory ? (
                     <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex gap-2">
                       <input 
@@ -251,7 +347,7 @@ export default function Expenses() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 mb-3 transition-colors">Amount</label>
+                  <label className={`block text-xs font-bold uppercase tracking-widest mb-3 transition-colors ${isEditing ? 'text-[#2E3A4A]/80 dark:text-blue-400/80' : 'text-[#0F0E0D]/60 dark:text-white/60'}`}>Amount</label>
                   <div className="relative">
                     <span className="absolute left-5 top-1/2 -translate-y-1/2 font-bold text-[#0F0E0D]/50 dark:text-white/50">$</span>
                     <input 
@@ -266,14 +362,29 @@ export default function Expenses() {
                   </div>
                 </div>
 
-                <motion.button 
-                  type="submit"
-                  whileHover={{ scale: 1.02 }} 
-                  whileTap={{ scale: 0.98 }} 
-                  className="w-full py-4 mt-2 sm:mt-4 bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D] font-extrabold uppercase tracking-widest text-[10px] rounded-2xl hover:bg-[#0F0E0D]/90 dark:hover:bg-white/90 transition-colors flex items-center justify-center gap-2 shadow-[0_10px_20px_-10px_rgba(15,14,13,0.4)] dark:shadow-[0_10px_20px_-10px_rgba(255,255,255,0.4)]"
-                >
-                  <Plus size={16} strokeWidth={3} /> Record Expense
-                </motion.button>
+                <div className="flex gap-2 mt-2 sm:mt-4">
+                  {isEditing && (
+                    <motion.button 
+                      type="button"
+                      onClick={cancelEdit}
+                      whileHover={{ scale: 1.02 }} 
+                      whileTap={{ scale: 0.98 }} 
+                      className="w-1/3 py-4 bg-white dark:bg-[#1A1A1A] text-[#0F0E0D] dark:text-white font-extrabold uppercase tracking-widest text-[10px] rounded-2xl border border-[#EBE6E0] dark:border-white/10 hover:bg-[#FBF9F6] transition-colors flex items-center justify-center shadow-sm"
+                    >
+                      Cancel
+                    </motion.button>
+                  )}
+                  <motion.button 
+                    type="submit"
+                    disabled={isSaving}
+                    whileHover={{ scale: 1.02 }} 
+                    whileTap={{ scale: 0.98 }} 
+                    className={`flex-1 py-4 font-extrabold uppercase tracking-widest text-[10px] rounded-2xl transition-colors flex items-center justify-center gap-2 shadow-[0_10px_20px_-10px_rgba(15,14,13,0.4)] dark:shadow-[0_10px_20px_-10px_rgba(255,255,255,0.4)] disabled:opacity-70 ${isEditing ? 'bg-blue-600 text-white dark:bg-blue-500 hover:bg-blue-700' : 'bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D] hover:bg-[#0F0E0D]/90 dark:hover:bg-white/90'}`}
+                  >
+                    {isSaving ? <Loader2 size={16} className="animate-spin" /> : (isEditing ? <Save size={16} strokeWidth={3} /> : <Plus size={16} strokeWidth={3} />)} 
+                    {isEditing ? 'Update Expense' : 'Record Expense'}
+                  </motion.button>
+                </div>
               </form>
             </div>
           </motion.div>
@@ -310,7 +421,6 @@ function StatCard({ title, value, trend, icon, variants, isDark = false }) {
         <p className={`${textColor} text-[1.75rem] sm:text-[2.2rem] font-extrabold tracking-tight leading-none transition-colors`}>{value}</p>
       </div>
 
-      {/* Decorative Wavy Lines (Fixed Dark Mode Logic) */}
       <div className="absolute -right-4 -bottom-4 pointer-events-none z-0">
         <svg width="150" height="100" viewBox="0 0 150 100" fill="none">
           <path 
