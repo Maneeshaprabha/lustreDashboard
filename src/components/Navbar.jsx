@@ -15,12 +15,48 @@ export default function Navbar({ title, onMenuClick }) {
   const [totalProfit, setTotalProfit] = useState(0);
   const [currentDate, setCurrentDate] = useState("");
 
+  // --- ALUTH: Dynamic User State ---
+  const [userData, setUserData] = useState({
+    name: "Admin User",
+    role: "Manager",
+    avatar: "https://ui-avatars.com/api/?name=Admin+User&background=0F0E0D&color=fff"
+  });
+
   useEffect(() => {
-    // --- ALUTH: Set dynamic exact date (e.g., "Aug 30, 2026") ---
+    // 1. Get Logged In User Data
+    const loadUserData = () => {
+      try {
+        // Assume user data is saved in localStorage after login
+        const storedUserStr = localStorage.getItem('user'); 
+        
+        if (storedUserStr) {
+          const storedUser = JSON.parse(storedUserStr);
+          
+          // Nama, email eken hari gannawa
+          const userName = storedUser.name || storedUser.full_name || storedUser.firstName || (storedUser.email ? storedUser.email.split('@')[0] : 'Admin User');
+          const userRole = storedUser.role || 'Manager';
+          
+          // Avatar eka naththam nama use karala auto hadanawa
+          const userAvatar = storedUser.avatar || storedUser.profile_pic || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=0F0E0D&color=fff`;
+
+          setUserData({
+            name: userName,
+            role: userRole,
+            avatar: userAvatar
+          });
+        }
+      } catch (error) {
+        console.error("Failed to parse user data", error);
+      }
+    };
+
+    loadUserData();
+
+    // 2. Set dynamic exact date (e.g., "Aug 30, 2026")
     const date = new Date();
     setCurrentDate(date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }));
 
-    // Fetch and calculate total profit
+    // 3. Fetch and calculate total profit
     const fetchProfitData = async () => {
       try {
         const [orders, expenses] = await Promise.all([
@@ -28,15 +64,10 @@ export default function Navbar({ title, onMenuClick }) {
           expenseService.getAll()
         ]);
 
-        // Salli aapa okkoma (Total Revenue)
         const totalRevenue = orders.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0);
-        
-        // Viyadam okkoma (Total Expenses)
         const totalExpenses = expenses.reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
 
-        // Suddha Laabaya (Net Profit)
         setTotalProfit(totalRevenue - totalExpenses);
-
       } catch (error) {
         console.error("Failed to fetch profit data for navbar", error);
       }
@@ -55,6 +86,9 @@ export default function Navbar({ title, onMenuClick }) {
 
   const handleLogout = () => {
     setIsProfileOpen(false);
+    // User wa local storage eken clear karanna oni nam meka uncomment karanna:
+    // localStorage.removeItem('user');
+    // localStorage.removeItem('token');
     navigate('/auth'); 
   };
 
@@ -102,20 +136,20 @@ export default function Navbar({ title, onMenuClick }) {
         {/* --- THEME TOGGLE BUTTON --- */}
         <ThemeToggle />
 
-        {/* User Profile & Dropdown */}
+        {/* User Profile & Dropdown (Dynamic) */}
         <div className="relative md:ml-1 md:pl-4 border-l border-transparent md:border-[#EBE6E0] dark:md:border-white/10 transition-colors" ref={profileRef}>
           <div 
             onClick={() => setIsProfileOpen(!isProfileOpen)}
             className="flex items-center gap-3 cursor-pointer group pl-2 md:pl-0"
           >
             <img
-              src="https://i.pravatar.cc/100?img=32"
-              alt="Profile"
+              src={userData.avatar}
+              alt={userData.name}
               className="w-9 h-9 md:w-10 md:h-10 rounded-full border-2 border-[#EBE6E0] dark:border-white/10 shadow-sm group-hover:scale-105 transition-transform object-cover"
             />
             <div className="text-sm hidden md:block">
-              <p className="font-extrabold tracking-tight leading-none text-[#0F0E0D] dark:text-white transition-colors">Kamisato Aya</p>
-              <p className="text-[#0F0E0D]/50 dark:text-white/50 text-[9px] mt-1.5 font-bold uppercase tracking-[0.2em] transition-colors">Manager</p>
+              <p className="font-extrabold tracking-tight leading-none text-[#0F0E0D] dark:text-white transition-colors">{userData.name}</p>
+              <p className="text-[#0F0E0D]/50 dark:text-white/50 text-[9px] mt-1.5 font-bold uppercase tracking-[0.2em] transition-colors">{userData.role}</p>
             </div>
             <ChevronDown 
               size={14} 
@@ -136,8 +170,8 @@ export default function Navbar({ title, onMenuClick }) {
               >
                 {/* Mobile Info */}
                 <div className="md:hidden px-5 py-3 border-b border-[#EBE6E0] dark:border-white/10 mb-2 transition-colors">
-                  <p className="font-extrabold text-[#0F0E0D] dark:text-white transition-colors">Kamisato Aya</p>
-                  <p className="text-[#0F0E0D]/50 dark:text-white/50 text-[9px] font-bold uppercase tracking-[0.2em] transition-colors">Manager</p>
+                  <p className="font-extrabold text-[#0F0E0D] dark:text-white transition-colors">{userData.name}</p>
+                  <p className="text-[#0F0E0D]/50 dark:text-white/50 text-[9px] font-bold uppercase tracking-[0.2em] transition-colors">{userData.role}</p>
                 </div>
 
                 <Link 
