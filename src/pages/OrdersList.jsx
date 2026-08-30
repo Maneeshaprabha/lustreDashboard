@@ -5,18 +5,29 @@ import {
   Plus, Search, Filter, MoreHorizontal, 
   Pencil, Trash2, ArrowUpDown, Truck, Loader2, AlertTriangle
 } from 'lucide-react';
-import { orderService } from '../services/orderService'; // <-- API Import
+import { orderService } from '../services/orderService'; 
 
 export default function OrdersList() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Search State
+  const [searchQuery, setSearchQuery] = useState('');
+
   // Delete Modal States
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, orderId: null, orderCustomId: '' });
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Fetch real data on mount
+  // Pagination States
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Search karaddi auto page 1 weni ekaata yanna
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
   useEffect(() => {
     fetchOrders();
   }, []);
@@ -45,10 +56,7 @@ export default function OrdersList() {
       setIsDeleting(true);
       await orderService.delete(deleteModal.orderId);
       
-      // Update UI
       setOrders(orders.filter(order => order.id !== deleteModal.orderId));
-      
-      // Close Modal
       setDeleteModal({ isOpen: false, orderId: null, orderCustomId: '' });
     } catch (err) {
       console.error('Failed to delete order', err);
@@ -57,6 +65,18 @@ export default function OrdersList() {
       setIsDeleting(false);
     }
   };
+
+  // --- Filtering & Pagination Logic ---
+  const filteredOrders = orders.filter(order => 
+    (order.custom_id && order.custom_id.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (order.customer_name && order.customer_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (order.customer_email && order.customer_email.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  const indexOfLastOrder = currentPage * itemsPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
+  const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -69,18 +89,17 @@ export default function OrdersList() {
   };
 
   const getStatusBadge = (status) => {
-    const currentStatus = status || 'Pending';
+    const currentStatus = status ? status.toUpperCase() : 'PENDING';
     switch(currentStatus) {
-      case 'Delivered': return 'bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D]';
-      case 'Shipped': return 'bg-[#F4F8F4] dark:bg-green-500/20 text-[#2E4A35] dark:text-green-400 border border-[#E2EBE2] dark:border-green-500/30';
-      case 'Processing': return 'bg-[#F4F8F9] dark:bg-blue-500/20 text-[#2E3A4A] dark:text-blue-400 border border-[#E2E6EB] dark:border-blue-500/30';
-      case 'Pending': return 'bg-[#FFF9F4] dark:bg-orange-500/20 text-[#6A4A2E] dark:text-orange-400 border border-[#F2EAE2] dark:border-orange-500/30';
-      case 'Cancelled': return 'bg-[#FFF4F4] dark:bg-red-500/20 text-[#6A3131] dark:text-red-400 border border-[#F2E2E2] dark:border-red-500/30';
+      case 'DELIVERED': return 'bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D]';
+      case 'SHIPPED': return 'bg-[#F4F8F4] dark:bg-green-500/20 text-[#2E4A35] dark:text-green-400 border border-[#E2EBE2] dark:border-green-500/30';
+      case 'PROCESSING': return 'bg-[#F4F8F9] dark:bg-blue-500/20 text-[#2E3A4A] dark:text-blue-400 border border-[#E2E6EB] dark:border-blue-500/30';
+      case 'PENDING': return 'bg-[#FFF9F4] dark:bg-orange-500/20 text-[#6A4A2E] dark:text-orange-400 border border-[#F2EAE2] dark:border-orange-500/30';
+      case 'CANCELLED': return 'bg-[#FFF4F4] dark:bg-red-500/20 text-[#6A3131] dark:text-red-400 border border-[#F2E2E2] dark:border-red-500/30';
       default: return 'bg-[#FBF9F6] dark:bg-white/10 text-[#0F0E0D] dark:text-white';
     }
   };
 
-  // Format date nicely
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     const options = { month: 'short', day: '2-digit', year: 'numeric' };
@@ -103,6 +122,8 @@ export default function OrdersList() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#0F0E0D]/40 dark:text-white/40 transition-colors" size={16} strokeWidth={2.5} />
               <input 
                 type="text" 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search orders..." 
                 className="w-full pl-11 pr-4 py-3 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-[1.5rem] text-sm focus:border-[#0F0E0D]/30 dark:focus:border-white/30 outline-none transition-all font-bold placeholder:text-[#0F0E0D]/40 dark:placeholder:text-white/40 text-[#0F0E0D] dark:text-white shadow-sm"
               />
@@ -134,7 +155,7 @@ export default function OrdersList() {
             <div className="flex items-center justify-center min-h-[300px] text-red-500 font-bold text-sm">
               {error}
             </div>
-          ) : orders.length === 0 ? (
+          ) : filteredOrders.length === 0 ? (
              <div className="flex flex-col items-center justify-center min-h-[300px] text-[#0F0E0D]/40 dark:text-white/40">
                <p className="text-xs font-bold uppercase tracking-widest">No orders found</p>
              </div>
@@ -154,7 +175,7 @@ export default function OrdersList() {
                 </thead>
                 <tbody className="text-sm">
                   <AnimatePresence>
-                    {orders.map((order) => (
+                    {currentOrders.map((order) => (
                       <motion.tr 
                         key={order.id} 
                         initial={{ opacity: 0 }}
@@ -163,12 +184,10 @@ export default function OrdersList() {
                         className="border-b border-[#EBE6E0]/60 dark:border-white/5 hover:bg-[#FBF9F6]/50 dark:hover:bg-white/5 transition-colors group"
                       >
                         
-                        {/* Order ID */}
                         <td className="px-4 sm:px-6 py-4 sm:py-5 font-mono font-bold text-[#0F0E0D]/60 dark:text-white/60 text-xs tracking-wider transition-colors">
-                          {order.custom_id}
+                          {order.custom_id || order.order_number || 'N/A'}
                         </td>
                         
-                        {/* Customer Info */}
                         <td className="px-4 sm:px-6 py-4 sm:py-5">
                           <div>
                             <h4 className="font-extrabold text-[#0F0E0D] dark:text-white text-sm tracking-tight transition-colors">{order.customer_name}</h4>
@@ -176,44 +195,42 @@ export default function OrdersList() {
                           </div>
                         </td>
                         
-                        {/* Date */}
                         <td className="px-4 sm:px-6 py-4 sm:py-5 font-medium text-[#0F0E0D]/50 dark:text-white/50 text-xs transition-colors">
                           {formatDate(order.created_at)}
                         </td>
 
-                        {/* Shipping Info */}
                         <td className="px-4 sm:px-6 py-4 sm:py-5">
                           <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-1.5 text-[#0F0E0D]/80 dark:text-white/80 font-bold text-xs transition-colors">
-                              <Truck size={12} strokeWidth={2.5} /> {order.courier}
+                              <Truck size={12} strokeWidth={2.5} /> {order.courier || 'N/A'}
                             </div>
                             <div className="text-[10px] text-[#0F0E0D]/40 dark:text-white/40 font-mono font-bold transition-colors">
-                              {order.tracking_number}
+                              {order.tracking_number || 'Pending'}
                             </div>
                           </div>
                         </td>
                         
-                        {/* Status Badge */}
                         <td className="px-4 sm:px-6 py-4 sm:py-5">
                           <span className={`px-4 py-2 text-[9px] uppercase tracking-[0.2em] font-bold rounded-full inline-flex items-center ${getStatusBadge(order.status)} transition-colors`}>
-                            {order.status}
+                            {order.status || 'PENDING'}
                           </span>
                         </td>
 
-                        {/* Amount */}
                         <td className="px-4 sm:px-6 py-4 sm:py-5 font-extrabold text-[#0F0E0D] dark:text-white text-base tracking-tight transition-colors">
-                          ${Number(order.total_amount).toFixed(2)}
+                          ${Number(order.total_amount || 0).toFixed(2)}
                         </td>
                         
-                        {/* Actions (Edit / Delete) */}
                         <td className="px-4 sm:px-6 py-4 sm:py-5">
                           <div className="flex items-center justify-end gap-1 sm:gap-2 opacity-100 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
+                            
+                            {/* EDIT BUTTON */}
                             <Link to={`/edit-order/${order.id}`} className="p-2 text-[#0F0E0D]/50 dark:text-white/50 hover:text-[#0F0E0D] dark:hover:text-white hover:bg-[#EBE6E0] dark:hover:bg-white/10 rounded-xl transition-colors" title="Edit Order">
                               <Pencil size={16} strokeWidth={2.5} />
                             </Link>
                             
+                            {/* DELETE BUTTON */}
                             <button 
-                              onClick={() => handleDeleteClick(order.id, order.custom_id)}
+                              onClick={() => handleDeleteClick(order.id, order.custom_id || order.order_number)}
                               className="p-2 text-[#0F0E0D]/50 dark:text-white/50 hover:text-[#6A3131] dark:hover:text-red-400 hover:bg-[#FFF4F4] dark:hover:bg-red-500/20 rounded-xl transition-colors" 
                               title="Delete Order"
                             >
@@ -234,12 +251,26 @@ export default function OrdersList() {
           )}
           
           {/* Pagination Footer */}
-          {!loading && !error && orders.length > 0 && (
+          {!loading && !error && filteredOrders.length > 0 && (
             <div className="px-6 sm:px-8 py-5 border-t border-[#EBE6E0] dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/50 dark:text-white/50 transition-colors">
-              <p className="text-center sm:text-left">Showing 1 to {orders.length} of {orders.length} results</p>
+              <p className="text-center sm:text-left">
+                Showing {indexOfFirstOrder + 1} to {Math.min(indexOfLastOrder, filteredOrders.length)} of {filteredOrders.length} results
+              </p>
               <div className="flex gap-2 w-full sm:w-auto">
-                <button className="flex-1 sm:flex-none px-5 py-2.5 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-[1.2rem] hover:bg-[#FBF9F6] dark:hover:bg-white/5 transition-colors text-[#0F0E0D] dark:text-white text-center">Previous</button>
-                <button className="flex-1 sm:flex-none px-5 py-2.5 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-[1.2rem] hover:bg-[#FBF9F6] dark:hover:bg-white/5 transition-colors text-[#0F0E0D] dark:text-white text-center">Next</button>
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="flex-1 sm:flex-none px-5 py-2.5 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-[1.2rem] hover:bg-[#FBF9F6] dark:hover:bg-white/5 transition-colors text-[#0F0E0D] dark:text-white text-center disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="flex-1 sm:flex-none px-5 py-2.5 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-[1.2rem] hover:bg-[#FBF9F6] dark:hover:bg-white/5 transition-colors text-[#0F0E0D] dark:text-white text-center disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
               </div>
             </div>
           )}

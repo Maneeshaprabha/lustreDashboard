@@ -16,6 +16,7 @@ import OrdersList from './pages/OrdersList';
 import AddOrder from './pages/AddOrder';
 import Settings from './pages/Settings';
 import EditProduct from './pages/EditProduct';
+import EditOrder from './pages/EditOrder';
 
 export default function App() {
   return (
