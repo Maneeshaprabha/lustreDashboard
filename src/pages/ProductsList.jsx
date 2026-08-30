@@ -207,7 +207,7 @@ export default function ProductsList() {
                           </td>
                           
                           <td className="px-4 sm:px-6 py-4 sm:py-5 font-extrabold text-[#0F0E0D] dark:text-white text-base tracking-tight transition-colors">
-                            ${Number(product.base_price || 0).toFixed(2)}
+                            LKR {Number(product.base_price || 0).toFixed(2)}
                           </td>
                           
                           <td className="px-4 sm:px-6 py-4 sm:py-5 font-medium text-[#0F0E0D]/70 dark:text-white/70 text-xs transition-colors">
