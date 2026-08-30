@@ -15,26 +15,27 @@ export default function Navbar({ title, onMenuClick }) {
   const [totalProfit, setTotalProfit] = useState(0);
   const [currentDate, setCurrentDate] = useState("");
 
-  // --- ALUTH: Dynamic User State ---
+  // --- ALUTH: Default state eka "None" kiyala damma ---
   const [userData, setUserData] = useState({
-    name: "Admin User",
-    role: "Manager",
-    avatar: "https://ui-avatars.com/api/?name=Admin+User&background=0F0E0D&color=fff"
+    name: "Loading...",
+    role: "None",
+    avatar: "https://ui-avatars.com/api/?name=User&background=0F0E0D&color=fff"
   });
 
   useEffect(() => {
     // 1. Get Logged In User Data
     const loadUserData = () => {
       try {
-        // Assume user data is saved in localStorage after login
         const storedUserStr = localStorage.getItem('user'); 
         
         if (storedUserStr) {
           const storedUser = JSON.parse(storedUserStr);
           
-          // Nama, email eken hari gannawa
-          const userName = storedUser.name || storedUser.full_name || storedUser.firstName || (storedUser.email ? storedUser.email.split('@')[0] : 'Admin User');
-          const userRole = storedUser.role || 'Manager';
+          // Database eke thiyena 'name' eka gannawa
+          const userName = storedUser.name || storedUser.full_name || storedUser.firstName || (storedUser.email ? storedUser.email.split('@')[0] : 'User');
+          
+          // Role ekak nathnam "None" kiyala gannawa
+          const userRole = storedUser.role ? storedUser.role : 'None';
           
           // Avatar eka naththam nama use karala auto hadanawa
           const userAvatar = storedUser.avatar || storedUser.profile_pic || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=0F0E0D&color=fff`;
@@ -86,9 +87,9 @@ export default function Navbar({ title, onMenuClick }) {
 
   const handleLogout = () => {
     setIsProfileOpen(false);
-    // User wa local storage eken clear karanna oni nam meka uncomment karanna:
-    // localStorage.removeItem('user');
-    // localStorage.removeItem('token');
+    // User wa system eken logout karanawa
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
     navigate('/auth'); 
   };
 
@@ -124,7 +125,7 @@ export default function Navbar({ title, onMenuClick }) {
         {/* Current Profit Pill (Dynamic) */}
         <div className="hidden xl:flex px-4 py-2.5 bg-white dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-[1.5rem] text-xs uppercase tracking-widest font-bold text-[#0F0E0D] dark:text-white hover:bg-[#FBF9F6] dark:hover:bg-white/5 transition-colors items-center gap-2 cursor-pointer whitespace-nowrap shadow-[0_5px_15px_-5px_rgba(0,0,0,0.02)]">
           <TrendingUp size={14} strokeWidth={2.5} className="text-[#2E4A35] dark:text-green-400" />
-          <span>${totalProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          <span>LKR{totalProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
         </div>
 
         {/* Date Pill (Dynamic Full Date) */}
