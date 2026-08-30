@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Layers, Plus, Trash2, MoreHorizontal, LayoutGrid, Tag, FolderOpen, Loader2 
+  Layers, Plus, Trash2, MoreHorizontal, LayoutGrid, Tag, FolderOpen, Loader2, Pencil, X, AlertTriangle 
 } from 'lucide-react';
 import { categoryService } from '../services/categoryService';
 
@@ -11,9 +11,21 @@ export default function Categories() {
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Form State
+  // Form State (Create)
   const [newName, setNewName] = useState('');
   const [newStatus, setNewStatus] = useState('ACTIVE');
+
+  // Edit Modal State
+  const [editModal, setEditModal] = useState({ isOpen: false, rawId: null, name: '', status: 'ACTIVE' });
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Delete Modal State
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, rawId: null, displayName: '' });
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // --- ALUTH: Pagination State ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     loadCategories();
@@ -50,15 +62,85 @@ export default function Categories() {
     }
   };
 
-  const handleDelete = async (rawId, displayId) => {
-    if (!window.confirm(`Are you sure you want to delete category ${displayId}?`)) return;
+  // Edit Handlers
+  const handleEditClick = (cat) => {
+    setEditModal({ isOpen: true, rawId: cat.rawId, name: cat.name, status: cat.status || 'ACTIVE' });
+  };
+
+const handleUpdateCategory = async (e) => {
+    e.preventDefault();
+    if (!editModal.name.trim() || !editModal.rawId) return;
 
     try {
-      await categoryService.delete(rawId);
-      setCategories(prev => prev.filter(cat => cat.rawId !== rawId));
+      setIsUpdating(true);
+      
+      // 1. API Update Request එක යවනවා
+      await categoryService.update(editModal.rawId, { 
+        name: editModal.name.trim(), 
+        status: editModal.status 
+      });
+
+      // 2. Local state එක instant update කරනවා (මේකෙන් තමයි table එක update වෙන්නේ)
+      setCategories(prev => prev.map(cat => 
+        cat.rawId === editModal.rawId 
+          ? { ...cat, name: editModal.name.trim(), status: editModal.status } 
+          : cat
+      ));
+
+      // 3. Modal එක close කරනවා
+      setEditModal({ isOpen: false, rawId: null, name: '', status: 'ACTIVE' });
+      
+      // ❌ මෙතන තිබ්බ `await loadCategories();` අයින් කළා! 
+      // හේතුව: පරණ data ඇවිත් අලුත් update එක මකාගෙන යන එක නවත්වන්න.
+      
+    } catch (err) {
+      alert(err.message || 'Failed to update category');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Delete Handlers
+  const handleDeleteClick = (rawId, displayName) => {
+    setDeleteModal({ isOpen: true, rawId, displayName });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteModal.rawId) return;
+
+    try {
+      setIsDeleting(true);
+      await categoryService.delete(deleteModal.rawId);
+      
+      const updatedCategories = categories.filter(cat => cat.rawId !== deleteModal.rawId);
+      setCategories(updatedCategories);
+      
+      // Delete කළාට පස්සේ page එක හිස් නම් කලින් පිටුවට යන්න
+      const totalPagesAfterDelete = Math.ceil(updatedCategories.length / itemsPerPage);
+      if (currentPage > totalPagesAfterDelete && totalPagesAfterDelete > 0) {
+        setCurrentPage(totalPagesAfterDelete);
+      }
+
+      setDeleteModal({ isOpen: false, rawId: null, displayName: '' });
     } catch (err) {
       alert(err.message || 'Failed to delete category');
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  // --- ALUTH: Pagination Logic ---
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentCategories = categories.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(categories.length / itemsPerPage);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(prev => prev + 1);
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) setCurrentPage(prev => prev - 1);
   };
 
   const containerVariants = {
@@ -87,7 +169,7 @@ export default function Categories() {
   return (
     <div className="w-full bg-[#FBF9F6] dark:bg-[#0A0A0A] min-h-screen transition-colors duration-300">
       <motion.div variants={containerVariants} initial="hidden" animate="visible" className="p-4 sm:p-6 md:p-10 max-w-[1400px] w-full mx-auto space-y-6 sm:space-y-8">
-        
+
         {/* HEADER CONTROLS */}
         <motion.div variants={itemVariants} className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
           <div>
@@ -129,81 +211,118 @@ export default function Categories() {
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 sm:gap-8">
-          
+
           {/* CATEGORIES TABLE (LEFT COLUMN) */}
-          <motion.div variants={itemVariants} className="xl:col-span-2 bg-white dark:bg-[#111111] p-6 sm:p-8 md:p-10 rounded-[2.5rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.03)] border border-[#EBE6E0] dark:border-white/10 overflow-hidden transition-colors">
+          <motion.div variants={itemVariants} className="xl:col-span-2 bg-white dark:bg-[#111111] p-6 sm:p-8 md:p-10 rounded-[2.5rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.03)] border border-[#EBE6E0] dark:border-white/10 flex flex-col transition-colors">
             <div className="flex justify-between items-center mb-6 sm:mb-8">
               <h2 className="text-xl sm:text-2xl font-bold text-[#0F0E0D] dark:text-white transition-colors">Category List</h2>
             </div>
-            
+
             {loading ? (
               <div className="flex flex-col items-center justify-center min-h-[300px] text-[#0F0E0D]/40 dark:text-white/40">
                 <Loader2 className="animate-spin mb-3" size={28} />
                 <p className="text-xs font-bold uppercase tracking-widest">Loading Categories...</p>
               </div>
+            ) : categories.length === 0 ? (
+              <div className="flex flex-col items-center justify-center min-h-[300px] text-[#0F0E0D]/40 dark:text-white/40">
+                <p className="text-xs font-bold uppercase tracking-widest">No categories found</p>
+              </div>
             ) : (
-              <div className="overflow-x-auto min-h-[300px] sm:min-h-[400px]">
-                <table className="w-full text-left border-collapse min-w-[600px]">
-                  <thead>
-                    <tr className="text-[#0F0E0D]/50 dark:text-white/50 text-[9px] uppercase tracking-[0.25em] border-b border-[#EBE6E0] dark:border-white/10 transition-colors">
-                      <th className="pb-5 font-bold">Category Name</th>
-                      <th className="pb-5 font-bold text-center">Products</th>
-                      <th className="pb-5 font-bold">Status</th>
-                      <th className="pb-5 font-bold">Date Created</th>
-                      <th className="pb-5 font-bold text-center">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-sm">
-                    <AnimatePresence>
-                      {categories.map((cat) => (
-                        <motion.tr 
-                          key={cat.id} 
-                          initial={{ opacity: 0, y: 10 }} 
-                          animate={{ opacity: 1, y: 0 }} 
-                          exit={{ opacity: 0, scale: 0.95 }} 
-                          className="border-b border-[#EBE6E0]/60 dark:border-white/5 hover:bg-[#FBF9F6]/50 dark:hover:bg-white/5 transition-colors group"
-                        >
-                          <td className="py-4 sm:py-5">
-                            <div className="flex items-center gap-3 sm:gap-4">
-                              <div className="w-10 h-10 shrink-0 rounded-2xl bg-[#FBF9F6] dark:bg-white/5 border border-[#EBE6E0] dark:border-white/10 flex items-center justify-center text-[#0F0E0D] dark:text-white transition-colors">
-                                <FolderOpen size={16} strokeWidth={2.5} />
-                              </div>
-                              <div>
-                                <p className="font-extrabold text-[#0F0E0D] dark:text-white text-sm tracking-tight transition-colors">{cat.name}</p>
-                                <p className="font-mono font-bold text-[#0F0E0D]/40 dark:text-white/40 text-[10px] mt-0.5 transition-colors">{cat.id}</p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-4 sm:py-5 text-center font-bold text-[#0F0E0D]/70 dark:text-white/70 transition-colors">{cat.products}</td>
-                          <td className="py-4 sm:py-5">
-                            <span className={`px-4 py-2 text-[9px] font-bold uppercase tracking-[0.2em] rounded-full inline-flex transition-colors ${getStatusBadge(cat.status)}`}>
-                              {cat.status}
-                            </span>
-                          </td>
-                          <td className="py-4 sm:py-5 font-medium text-[#0F0E0D]/60 dark:text-white/60 text-xs transition-colors">{cat.date}</td>
-                          <td className="py-4 sm:py-5 text-center">
-                            <div className="flex justify-center items-center gap-1 sm:gap-2 opacity-100 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
-                              <button className="p-2 text-[#0F0E0D]/40 dark:text-white/40 hover:text-[#0F0E0D] dark:hover:text-white transition-colors rounded-xl hover:bg-[#EBE6E0] dark:hover:bg-white/10 inline-flex">
-                                <MoreHorizontal size={16} strokeWidth={2.5} />
-                              </button>
-                              <button 
-                                onClick={() => handleDelete(cat.rawId, cat.id)} 
-                                className="p-2 text-[#0F0E0D]/30 dark:text-white/30 hover:text-[#6A3131] dark:hover:text-red-400 transition-colors rounded-xl hover:bg-[#FFF4F4] dark:hover:bg-red-500/20 inline-flex"
-                              >
-                                <Trash2 size={16} strokeWidth={2.5} />
-                              </button>
-                            </div>
-                          </td>
-                        </motion.tr>
-                      ))}
-                    </AnimatePresence>
-                    {categories.length === 0 && (
-                      <tr>
-                        <td colSpan="5" className="py-10 text-center text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/40 dark:text-white/40">No categories found.</td>
+              <div className="flex flex-col h-full justify-between">
+                <div className="overflow-x-auto min-h-[300px] sm:min-h-[400px]">
+                  <table className="w-full text-left border-collapse min-w-[600px]">
+                    <thead>
+                      <tr className="text-[#0F0E0D]/50 dark:text-white/50 text-[9px] uppercase tracking-[0.25em] border-b border-[#EBE6E0] dark:border-white/10 transition-colors">
+                        <th className="pb-5 font-bold">Category Name</th>
+                        <th className="pb-5 font-bold text-center">Products</th>
+                        <th className="pb-5 font-bold">Status</th>
+                        <th className="pb-5 font-bold">Date Created</th>
+                        <th className="pb-5 font-bold text-center">Action</th>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="text-sm">
+                      <AnimatePresence mode="wait">
+                        {/* ALUTH: currentCategories.map පාවිච්චි කළා */}
+                        {currentCategories.map((cat) => (
+                          <motion.tr 
+                            key={cat.id} 
+                            initial={{ opacity: 0, y: 10 }} 
+                            animate={{ opacity: 1, y: 0 }} 
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.2 }}
+                            className="border-b border-[#EBE6E0]/60 dark:border-white/5 hover:bg-[#FBF9F6]/50 dark:hover:bg-white/5 transition-colors group"
+                          >
+                            <td className="py-4 sm:py-5">
+                              <div className="flex items-center gap-3 sm:gap-4">
+                                <div className="w-10 h-10 shrink-0 rounded-2xl bg-[#FBF9F6] dark:bg-white/5 border border-[#EBE6E0] dark:border-white/10 flex items-center justify-center text-[#0F0E0D] dark:text-white transition-colors">
+                                  <FolderOpen size={16} strokeWidth={2.5} />
+                                </div>
+                                <div>
+                                  <p className="font-extrabold text-[#0F0E0D] dark:text-white text-sm tracking-tight transition-colors">{cat.name}</p>
+                                  <p className="font-mono font-bold text-[#0F0E0D]/40 dark:text-white/40 text-[10px] mt-0.5 transition-colors">{cat.id}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-4 sm:py-5 text-center font-bold text-[#0F0E0D]/70 dark:text-white/70 transition-colors">{cat.products}</td>
+                            <td className="py-4 sm:py-5">
+                              <span className={`px-4 py-2 text-[9px] font-bold uppercase tracking-[0.2em] rounded-full inline-flex transition-colors ${getStatusBadge(cat.status)}`}>
+                                {cat.status}
+                              </span>
+                            </td>
+                            <td className="py-4 sm:py-5 font-medium text-[#0F0E0D]/60 dark:text-white/60 text-xs transition-colors">{cat.date}</td>
+                            <td className="py-4 sm:py-5 text-center">
+                              <div className="flex justify-center items-center gap-1 sm:gap-2 opacity-100 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity">
+                                
+                                <button 
+                                  onClick={() => handleEditClick(cat)}
+                                  className="p-2 text-[#0F0E0D]/40 dark:text-white/40 hover:text-[#0F0E0D] dark:hover:text-white transition-colors rounded-xl hover:bg-[#EBE6E0] dark:hover:bg-white/10 inline-flex"
+                                  title="Edit Category"
+                                >
+                                  <Pencil size={16} strokeWidth={2.5} />
+                                </button>
+                                
+                                <button 
+                                  onClick={() => handleDeleteClick(cat.rawId, cat.name)} 
+                                  className="p-2 text-[#0F0E0D]/30 dark:text-white/30 hover:text-[#6A3131] dark:hover:text-red-400 transition-colors rounded-xl hover:bg-[#FFF4F4] dark:hover:bg-red-500/20 inline-flex"
+                                  title="Delete Category"
+                                >
+                                  <Trash2 size={16} strokeWidth={2.5} />
+                                </button>
+                              </div>
+                            </td>
+                          </motion.tr>
+                        ))}
+                      </AnimatePresence>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* ALUTH: Pagination Footer */}
+                {categories.length > 0 && (
+                  <div className="pt-6 mt-4 border-t border-[#EBE6E0] dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/50 dark:text-white/50 transition-colors">
+                    <p className="text-center sm:text-left">
+                      Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, categories.length)} of {categories.length} results
+                    </p>
+                    <div className="flex gap-2 w-full sm:w-auto">
+                      <button 
+                        type="button"
+                        onClick={handlePrevPage}
+                        disabled={currentPage === 1}
+                        className="flex-1 sm:flex-none px-5 py-2.5 bg-[#FBF9F6] dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-[1.2rem] hover:bg-white dark:hover:bg-white/5 transition-colors text-[#0F0E0D] dark:text-white text-center disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        Previous
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={handleNextPage}
+                        disabled={currentPage === totalPages}
+                        className="flex-1 sm:flex-none px-5 py-2.5 bg-[#FBF9F6] dark:bg-[#111111] border border-[#EBE6E0] dark:border-white/10 rounded-[1.2rem] hover:bg-white dark:hover:bg-white/5 transition-colors text-[#0F0E0D] dark:text-white text-center disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </motion.div>
@@ -213,7 +332,7 @@ export default function Categories() {
             <div>
               <h2 className="text-xl sm:text-2xl font-bold text-[#0F0E0D] dark:text-white mb-2 transition-colors">Create Category</h2>
               <p className="text-[10px] text-[#0F0E0D]/50 dark:text-white/50 font-bold uppercase tracking-[0.25em] mb-6 sm:mb-8 transition-colors">Add a new collection</p>
-              
+
               <form onSubmit={handleAddCategory} className="space-y-5 sm:space-y-6">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 mb-3 transition-colors">Category Name</label>
@@ -260,6 +379,132 @@ export default function Categories() {
         </div>
 
       </motion.div>
+
+      {/* EDIT CATEGORY MODAL */}
+      <AnimatePresence>
+        {editModal.isOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
+              className="absolute inset-0 bg-[#0F0E0D]/40 dark:bg-black/60 backdrop-blur-sm"
+              onClick={() => !isUpdating && setEditModal({ isOpen: false, rawId: null, name: '', status: 'ACTIVE' })}
+            />
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }} 
+              animate={{ opacity: 1, scale: 1, y: 0 }} 
+              exit={{ opacity: 0, scale: 0.95, y: 20 }} 
+              className="relative w-full max-w-md bg-white dark:bg-[#111111] rounded-[2.5rem] shadow-2xl border border-[#EBE6E0] dark:border-white/10 p-8 sm:p-10 overflow-hidden"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-[#0F0E0D] dark:text-white transition-colors">Edit Category</h3>
+                <button 
+                  type="button"
+                  onClick={() => setEditModal({ isOpen: false, rawId: null, name: '', status: 'ACTIVE' })}
+                  className="p-2 text-[#0F0E0D]/40 dark:text-white/40 hover:text-[#0F0E0D] dark:hover:text-white rounded-xl transition-colors"
+                >
+                  <X size={18} strokeWidth={2.5} />
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdateCategory} className="space-y-5">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 mb-3 transition-colors">Category Name</label>
+                  <input 
+                    type="text" 
+                    required 
+                    value={editModal.name} 
+                    onChange={(e) => setEditModal({ ...editModal, name: e.target.value })} 
+                    className="w-full bg-[#FBF9F6] dark:bg-white/5 px-5 py-4 rounded-2xl border border-transparent focus:bg-white dark:focus:bg-[#1A1A1A] focus:border-[#0F0E0D]/30 dark:focus:border-white/30 outline-none transition-all text-sm font-bold text-[#0F0E0D] dark:text-white" 
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-[#0F0E0D]/60 dark:text-white/60 mb-3 transition-colors">Status</label>
+                  <select 
+                    value={editModal.status} 
+                    onChange={(e) => setEditModal({ ...editModal, status: e.target.value })} 
+                    className="w-full bg-[#FBF9F6] dark:bg-white/5 text-[#0F0E0D] dark:text-white px-5 py-4 rounded-2xl border border-transparent focus:border-[#0F0E0D]/30 dark:focus:border-white/30 outline-none text-sm font-bold appearance-none cursor-pointer transition-colors"
+                  >
+                    <option className="dark:bg-[#111111]" value="ACTIVE">ACTIVE (Visible)</option>
+                    <option className="dark:bg-[#111111]" value="DRAFT">DRAFT (Hidden)</option>
+                  </select>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button 
+                    type="button"
+                    onClick={() => setEditModal({ isOpen: false, rawId: null, name: '', status: 'ACTIVE' })}
+                    disabled={isUpdating}
+                    className="flex-1 px-6 py-4 bg-[#FBF9F6] dark:bg-white/5 border border-[#EBE6E0] dark:border-white/10 rounded-[1.5rem] text-[10px] uppercase tracking-widest font-bold text-[#0F0E0D] dark:text-white hover:bg-[#EBE6E0] dark:hover:bg-white/10 transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit"
+                    disabled={isUpdating}
+                    className="flex-1 flex items-center justify-center px-6 py-4 bg-[#0F0E0D] dark:bg-white text-[#FBF9F6] dark:text-[#0F0E0D] rounded-[1.5rem] text-[10px] uppercase tracking-widest font-bold hover:bg-[#0F0E0D]/90 dark:hover:bg-white/90 transition-colors disabled:opacity-70 shadow-md"
+                  >
+                    {isUpdating ? <Loader2 size={16} className="animate-spin" /> : 'Save Changes'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* DELETE CONFIRMATION MODAL */}
+      <AnimatePresence>
+        {deleteModal.isOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
+              className="absolute inset-0 bg-[#0F0E0D]/40 dark:bg-black/60 backdrop-blur-sm"
+              onClick={() => !isDeleting && setDeleteModal({ isOpen: false, rawId: null, displayName: '' })}
+            />
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }} 
+              animate={{ opacity: 1, scale: 1, y: 0 }} 
+              exit={{ opacity: 0, scale: 0.95, y: 20 }} 
+              className="relative w-full max-w-md bg-white dark:bg-[#111111] rounded-[2.5rem] shadow-2xl border border-[#EBE6E0] dark:border-white/10 p-8 sm:p-10 overflow-hidden"
+            >
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center text-red-500 mb-6">
+                  <AlertTriangle size={32} strokeWidth={2.5} />
+                </div>
+                
+                <h3 className="text-xl sm:text-2xl font-bold text-[#0F0E0D] dark:text-white mb-2 transition-colors">Delete Category?</h3>
+                
+                <p className="text-sm font-medium text-[#0F0E0D]/60 dark:text-white/60 mb-8 leading-relaxed transition-colors">
+                  Are you sure you want to delete <span className="font-bold text-[#0F0E0D] dark:text-white">"{deleteModal.displayName}"</span>? This action cannot be undone.
+                </p>
+                
+                <div className="flex w-full gap-3">
+                  <button 
+                    type="button"
+                    onClick={() => setDeleteModal({ isOpen: false, rawId: null, displayName: '' })}
+                    disabled={isDeleting}
+                    className="flex-1 px-6 py-4 bg-[#FBF9F6] dark:bg-white/5 border border-[#EBE6E0] dark:border-white/10 rounded-[1.5rem] text-[10px] uppercase tracking-widest font-bold text-[#0F0E0D] dark:text-white hover:bg-[#EBE6E0] dark:hover:bg-white/10 transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={confirmDelete}
+                    disabled={isDeleting}
+                    className="flex-1 flex items-center justify-center px-6 py-4 bg-red-500 text-white rounded-[1.5rem] text-[10px] uppercase tracking-widest font-bold hover:bg-red-600 transition-colors shadow-[0_10px_20px_-10px_rgba(239,68,68,0.4)] disabled:opacity-70"
+                  >
+                    {isDeleting ? <Loader2 size={16} className="animate-spin" /> : 'Yes, Delete'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
@@ -269,7 +514,7 @@ function StatCard({ title, value, trend, icon, variants, isDark = false }) {
   const textColor = isDark ? "text-white dark:text-[#0F0E0D]" : "text-[#0F0E0D] dark:text-white";
   const titleColor = isDark ? "text-white/40 dark:text-[#0F0E0D]/40" : "text-[#0F0E0D]/40 dark:text-white/40";
   const borderColor = isDark ? "border-transparent" : "border-[#EBE6E0] dark:border-white/10";
-  
+
   return (
     <motion.div 
       variants={variants} 
@@ -283,7 +528,7 @@ function StatCard({ title, value, trend, icon, variants, isDark = false }) {
           {trend}
         </div>
       </div>
-      
+
       <div className="relative z-10 mt-5 sm:mt-6">
         <h3 className={`${titleColor} font-bold text-[10px] uppercase tracking-[0.15em] mb-1.5 transition-colors`}>{title}</h3>
         <p className={`${textColor} text-[1.75rem] sm:text-[2.2rem] font-extrabold tracking-tight leading-none transition-colors`}>{value}</p>
