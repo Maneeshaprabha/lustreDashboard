@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom'; // Navigation walata add kala
+import { useNavigate } from 'react-router-dom';
 import { DollarSign, Users, Package, TrendingUp, TrendingDown, MoreHorizontal, ShoppingBag, Loader2 } from 'lucide-react';
 import { orderService } from '../services/orderService';
 import { productService } from '../services/productService';
 
 export default function Overview() {
-  const navigate = useNavigate(); // Hook eka load karanawa
+  const navigate = useNavigate(); 
   const [loading, setLoading] = useState(true);
   
   // Real metrics states
@@ -172,7 +172,7 @@ export default function Overview() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard 
             title="Total Revenue" 
-            value={`$${metrics.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
+            value={`LKR ${metrics.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
             trend="Live" 
             isPositive={true} 
             icon={<DollarSign size={24} />} 
@@ -230,13 +230,13 @@ export default function Overview() {
               <div className="absolute inset-0 flex flex-col justify-between pt-2 pb-8 px-2">
                 {yLabels.map((val, i) => (
                   <div key={i} className="flex items-center gap-4 w-full">
-                    <span className="text-xs font-bold text-[#0F0E0D]/40 dark:text-white/40 w-10 text-right transition-colors">${val}</span>
+                    <span className="text-xs font-bold text-[#0F0E0D]/40 dark:text-white/40 w-12 text-right transition-colors">LKR {val}</span>
                     <div className="flex-1 border-t border-dashed border-[#EBE6E0] dark:border-white/10 transition-colors"></div>
                   </div>
                 ))}
               </div>
 
-              <div className="absolute inset-0 ml-[60px] mb-8">
+              <div className="absolute inset-0 ml-[70px] mb-8">
                 <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 1000 300">
                   <defs>
                     <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1" className="text-[#0F0E0D] dark:text-white transition-colors">
@@ -265,7 +265,7 @@ export default function Overview() {
                           className="fill-white dark:fill-[#111111] stroke-[#0F0E0D] dark:stroke-white transition-all duration-300 cursor-pointer hover:scale-125 origin-center" 
                           strokeWidth="3" 
                         >
-                          <title>{point.month}: ${point.revenue.toFixed(2)}</title>
+                          <title>{point.month}: LKR {point.revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</title>
                         </circle>
                       ))}
                     </>
@@ -273,7 +273,7 @@ export default function Overview() {
                 </svg>
               </div>
 
-              <div className="mt-auto ml-[60px] flex justify-between pr-2 relative z-10">
+              <div className="mt-auto ml-[70px] flex justify-between pr-2 relative z-10">
                 {chartData.map((d, i) => (
                   <span key={i} className="text-[10px] sm:text-xs font-bold text-[#0F0E0D]/40 dark:text-white/40 transition-colors">
                     {d.month}
@@ -296,7 +296,7 @@ export default function Overview() {
                     key={prod.id || idx}
                     name={prod.name} 
                     category={prod.category || "General"} 
-                    price={`$${(prod.base_price || 0).toFixed(2)}`} 
+                    price={`LKR ${(prod.base_price || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
                     sales={`${Math.floor(Math.random() * 50) + 10} sales`} 
                     img={prod.img_url || "https://via.placeholder.com/150"} 
                   />
@@ -306,9 +306,9 @@ export default function Overview() {
               </div>
             </div>
             
-            {/* VIEW ALL BUTTON (Restored) */}
+            {/* VIEW ALL BUTTON */}
             <button 
-              onClick={() => navigate('/products')} // Kelinma Products page ekata yanawa
+              onClick={() => navigate('/products')}
               className="w-full mt-6 py-3.5 bg-[#EBE6E0]/50 dark:bg-white/10 text-[#0F0E0D] dark:text-white font-bold rounded-2xl text-sm hover:bg-[#EBE6E0] dark:hover:bg-white/20 transition-colors"
             >
               View All Products
@@ -341,7 +341,7 @@ export default function Overview() {
                       name={order.customer_name} 
                       date={new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })} 
                       status={order.status || 'PENDING'} 
-                      amount={`$${Number(order.total_amount || 0).toFixed(2)}`} 
+                      amount={`LKR ${Number(order.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
                     />
                   )) : (
                     <tr>
